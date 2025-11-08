@@ -1,21 +1,37 @@
 <?php
 // db.php
+// Laragon-friendly mysqli connection wrapper
 
-// Database configuration
-$dbHost = 'localhost';
-$dbUser = 'root'; // Replace with your database username
-$dbPass = ''; // Replace with your database password if you have one
+// Laragon default MySQL settings typically are:
+// host: 127.0.0.1 (use 127.0.0.1 to avoid socket/pipe issues),
+// user: root
+// password: (empty)
+// port: 3306
+
+// Database configuration - change these if your setup differs
+$dbHost = '127.0.0.1';
+$dbPort = 3306;
+$dbUser = 'root';
+$dbPass = '';
 $dbName = 'mtp_db';
 
-// Create a new mysqli object to connect to the database
-$conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
+// Enable mysqli exceptions for easier error handling
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check for a connection error
-if ($conn->connect_error) {
-    // If there is an error, stop the script and display the error message
-    die("Connection failed: " . $conn->connect_error);
+try {
+    // Create a new mysqli object to connect to the database
+    $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort);
+    // Set charset to utf8mb4
+    $conn->set_charset('utf8mb4');
+} catch (mysqli_sql_exception $e) {
+    // If there is an error, stop the script and display a friendly message
+    // For production, consider logging $e->getMessage() instead of echoing it
+    die("Database connection failed: " . $e->getMessage());
 }
 
-// Start a new session or resume the existing one
-session_start();
+// Start a session if one is not already active
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 ?>

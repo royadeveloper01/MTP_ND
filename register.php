@@ -6,45 +6,139 @@ $message = ''; // Variable to store messages for the user
 
 // Check if the form has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Retrieve form data
-    $fname = $_POST['fname'];
-    $lname = $_POST['lname'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $phone_number = $_POST['phone_number'];
+    // Retrieve and sanitize form data
+    $fname = isset($_POST['fname']) ? trim($_POST['fname']) : '';
+    $lname = isset($_POST['lname']) ? trim($_POST['lname']) : '';
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $phone_number = isset($_POST['phone_number']) ? trim($_POST['phone_number']) : null;
 
     // Basic validation
-    if (empty($fname) || empty($lname) || empty($email) || empty($password)) {
+    if ($fname === '' || $lname === '' || $email === '' || $password === '') {
         $message = "Please fill in all required fields.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
     } else {
-        // Check if email already exists
-        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $stmt->store_result();
-
-        if ($stmt->num_rows > 0) {
-            $message = "An account with this email already exists.";
-        } else {
-            // Hash the password for security
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            // Prepare an SQL statement to insert the new user
-            $stmt = $conn->prepare("INSERT INTO users (fname, lname, email, password, phone_number) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssss", $fname, $lname, $email, $hashed_password, $phone_number);
-
-            // Execute the statement and check for success
-            if ($stmt->execute()) {
-                $message = "Registration successful! You can now <a href='login.php'>login</a>.";
-            } else {
-                $message = "Error: " . $stmt->error;
+        try {
+            // First, check what columns exist in the users table
+            $colsRes = $conn->query("SHOW COLUMNS FROM users");
+            $cols = [];
+            while ($c = $colsRes->fetch_assoc()) {
+                $cols[] = $c['Field'];
             }
+
+            // Map form fields to possible column names
+            $columnMap = [
+                'fname' => ['fname', 'first_name', 'firstname'],
+                'lname' => ['lname', 'last_name', 'lastname'],
+                'name' => ['name', 'full_name', 'username'],
+                'email' => ['email', 'user_email', 'mail'],
+                'phone' => ['phone_number', 'phone', 'contact']
+            ];
+
+            // Find which columns actually exist
+            $existingCols = [];
+            $values = [];
+            $types = '';
+
+            // Email and password are required
+            $emailCol = 'email'; // default
+            foreach ($columnMap['email'] as $col) {
+                if (in_array($col, $cols)) {
+                    $emailCol = $col;
+                    break;
+                }
+            }
+            $existingCols[] = $emailCol;
+            $values[] = $email;
+            $types .= 's';
+
+            // Add password
+            if (in_array('password', $cols)) {
+                $existingCols[] = 'password';
+                $values[] = password_hash($password, PASSWORD_DEFAULT);
+                $types .= 's';
+            }
+
+            // Try to find first name column
+            foreach ($columnMap['fname'] as $col) {
+                if (in_array($col, $cols)) {
+                    $existingCols[] = $col;
+                    $values[] = $fname;
+                    $types .= 's';
+                    break;
+                }
+            }
+
+            // Try to find last name column
+            foreach ($columnMap['lname'] as $col) {
+                if (in_array($col, $cols)) {
+                    $existingCols[] = $col;
+                    $values[] = $lname;
+                    $types .= 's';
+                    break;
+                }
+            }
+
+            // If no separate first/last name, try full name
+            if (!in_array('fname', $existingCols) && !in_array('first_name', $existingCols)) {
+                foreach ($columnMap['name'] as $col) {
+                    if (in_array($col, $cols)) {
+                        $existingCols[] = $col;
+                        $values[] = trim($fname . ' ' . $lname);
+                        $types .= 's';
+                        break;
+                    }
+                }
+            }
+
+            // Phone is optional
+            if ($phone_number) {
+                foreach ($columnMap['phone'] as $col) {
+                    if (in_array($col, $cols)) {
+                        $existingCols[] = $col;
+                        $values[] = $phone_number;
+                        $types .= 's';
+                        break;
+                    }
+                }
+            }
+
+            // Check if email already exists
+            $stmt = $conn->prepare("SELECT id FROM users WHERE $emailCol = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows > 0) {
+                $message = "An account with this email already exists.";
+            } else {
+                // Build the INSERT query dynamically based on existing columns
+                $cols_str = implode(', ', array_map(function($col) { 
+                    return "`" . str_replace("`", "", $col) . "`"; 
+                }, $existingCols));
+                
+                $placeholders = str_repeat('?,', count($existingCols) - 1) . '?';
+                $sql = "INSERT INTO users ($cols_str) VALUES ($placeholders)";
+
+                // Prepare and execute the INSERT
+                $stmt->close();
+                $stmt = $conn->prepare($sql);
+                
+                // Bind all parameters dynamically
+                $stmt->bind_param($types, ...$values);
+
+                if ($stmt->execute()) {
+                    $message = "Registration successful! You can now <a href='login.php'>login</a>.";
+                } else {
+                    $message = "Error: " . htmlspecialchars($stmt->error);
+                }
+            }
+            $stmt->close();
+        } catch (mysqli_sql_exception $e) {
+            $message = "Database error: " . htmlspecialchars($e->getMessage());
         }
-        $stmt->close();
     }
-    $conn->close();
 }
 ?>
 
