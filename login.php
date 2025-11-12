@@ -55,11 +55,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
 
                 // Verify the submitted password against the hashed password in the database
-                if (password_verify($password, $hashed_password)) {
+                if ($hashed_password !== null && password_verify($password, $hashed_password)) {
                     // Password is correct, so create session variables
                     $_SESSION['loggedin'] = true;
                     $_SESSION['id'] = $id;
                     $_SESSION['fname'] = $fname;
+                    
 
                     // Redirect user to the dashboard page
                     header("Location: index.php");
@@ -86,24 +87,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <title>Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .container { width: 300px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 8px; margin: 10px 0; }
-        input[type="submit"] { background-color: #008CBA; color: white; padding: 10px; border: none; cursor: pointer; }
-        .message { color: red; }
-    </style>
 </head>
 <body>
-    <div class="container">
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.php">MTP Store</a>
+        </div>
+        <div>
+            <a href="index.php">Home</a>
+            <a href="register.php">Register</a>
+        </div>
+    </nav>
+    <div class="form-container">
         <h2>Login</h2>
         <?php if (!empty($message)) { echo "<p class='message'>{$message}</p>"; } ?>
         <form action="login.php" method="post">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="submit" value="Login">
+            <input type="email" name="email" placeholder="Email" required class="form-control">
+            <input type="password" name="password" placeholder="Password" required class="form-control">
+            <input type="submit" value="Login" class="btn btn-primary">
         </form>
         <p>Don't have an account? <a href="register.php">Register here</a>.</p>
     </div>
