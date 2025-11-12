@@ -11,132 +11,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $lname = isset($_POST['lname']) ? trim($_POST['lname']) : '';
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
-    $phone_number = isset($_POST['phone_number']) ? trim($_POST['phone_number']) : null;
+    $phone_number = isset($_POST['phone_number']) ? trim($_POST['phone_number']) : '';
+    $phone_number = !empty($phone_number) ? $phone_number : null; // Set to null if empty
 
     // Basic validation
     if ($fname === '' || $lname === '' || $email === '' || $password === '') {
         $message = "Please fill in all required fields.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Invalid email format.";
+    } elseif (strlen($password) < 6) {
+        $message = "Password must be at least 6 characters long.";
     } else {
         try {
-            // First, check what columns exist in the users table
-            $colsRes = $conn->query("SHOW COLUMNS FROM users");
-            $cols = [];
-            while ($c = $colsRes->fetch_assoc()) {
-                $cols[] = $c['Field'];
-            }
-
-            // Map form fields to possible column names
-            $columnMap = [
-                'fname' => ['fname', 'first_name', 'firstname'],
-                'lname' => ['lname', 'last_name', 'lastname'],
-                'name' => ['name', 'full_name', 'username'],
-                'email' => ['email', 'user_email', 'mail'],
-                'phone' => ['phone_number', 'phone', 'contact']
-            ];
-
-            // Find which columns actually exist
-            $existingCols = [];
-            $values = [];
-            $types = '';
-
-            // Email and password are required
-            $emailCol = 'email'; // default
-            foreach ($columnMap['email'] as $col) {
-                if (in_array($col, $cols)) {
-                    $emailCol = $col;
-                    break;
-                }
-            }
-            $existingCols[] = $emailCol;
-            $values[] = $email;
-            $types .= 's';
-
-            // Add password
-            if (in_array('password', $cols)) {
-                $existingCols[] = 'password';
-                $values[] = password_hash($password, PASSWORD_DEFAULT);
-                $types .= 's';
-            }
-
-            // Try to find first name column
-            foreach ($columnMap['fname'] as $col) {
-                if (in_array($col, $cols)) {
-                    $existingCols[] = $col;
-                    $values[] = $fname;
-                    $types .= 's';
-                    break;
-                }
-            }
-
-            // Try to find last name column
-            foreach ($columnMap['lname'] as $col) {
-                if (in_array($col, $cols)) {
-                    $existingCols[] = $col;
-                    $values[] = $lname;
-                    $types .= 's';
-                    break;
-                }
-            }
-
-            // If no separate first/last name, try full name
-            if (!in_array('fname', $existingCols) && !in_array('first_name', $existingCols)) {
-                foreach ($columnMap['name'] as $col) {
-                    if (in_array($col, $cols)) {
-                        $existingCols[] = $col;
-                        $values[] = trim($fname . ' ' . $lname);
-                        $types .= 's';
-                        break;
-                    }
-                }
-            }
-
-            // Phone is optional
-            if ($phone_number) {
-                foreach ($columnMap['phone'] as $col) {
-                    if (in_array($col, $cols)) {
-                        $existingCols[] = $col;
-                        $values[] = $phone_number;
-                        $types .= 's';
-                        break;
-                    }
-                }
-            }
-
             // Check if email already exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE $emailCol = ?");
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $stmt->store_result();
 
             if ($stmt->num_rows > 0) {
                 $message = "An account with this email already exists.";
-            } else {
-                // Build the INSERT query dynamically based on existing columns
-                $cols_str = implode(', ', array_map(function($col) { 
-                    return "`" . str_replace("`", "", $col) . "`"; 
-                }, $existingCols));
-                
-                $placeholders = str_repeat('?,', count($existingCols) - 1) . '?';
-                $sql = "INSERT INTO users ($cols_str) VALUES ($placeholders)";
-
-                // Prepare and execute the INSERT
                 $stmt->close();
+            } else {
+                // Hash the password for security
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+                // Prepare a simple, static INSERT statement
+                $sql = "INSERT INTO users (fname, lname, email, password, phone_number) VALUES (?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
-                
-                // Bind all parameters dynamically
-                $stmt->bind_param($types, ...$values);
+                $stmt->bind_param("sssss", $fname, $lname, $email, $hashed_password, $phone_number);
 
                 if ($stmt->execute()) {
-                    $message = "Registration successful! You can now <a href='login.php'>login</a>.";
+                    $message = "<div class='alert alert-success'>Registration successful! You can now <a href='login.php'>login</a>.</div>";
                 } else {
-                    $message = "Error: " . htmlspecialchars($stmt->error);
+                    $message = "<div class='alert alert-danger'>Error: " . htmlspecialchars($stmt->error) . "</div>";
                 }
+                $stmt->close();
             }
-            $stmt->close();
         } catch (mysqli_sql_exception $e) {
-            $message = "Database error: " . htmlspecialchars($e->getMessage());
+            $message = "<div class='alert alert-danger'>Database error: " . htmlspecialchars($e->getMessage()) . "</div>";
         }
     }
 }
@@ -146,26 +59,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .container { width: 300px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; }
-        input[type="text"], input[type="password"], input[type="email"] { width: 100%; padding: 8px; margin: 10px 0; }
-        input[type="submit"] { background-color: #4CAF50; color: white; padding: 10px; border: none; cursor: pointer; }
-        .message { color: red; }
-    </style>
+    <title>Register - MTP Store</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <nav class="navbar">
+        <a href="index.php" class="logo">MTP Store</a>
+        <div>
+            <a href="index.php">Home</a>
+            <a href="login.php">Login</a>
+        </div>
+    </nav>
+    <div class="form-container">
         <h2>Register</h2>
-        <?php if (!empty($message)) { echo "<p class='message'>{$message}</p>"; } ?>
+        <?= $message ?>
         <form action="register.php" method="post">
-            <input type="text" name="fname" placeholder="First Name" required>
-            <input type="text" name="lname" placeholder="Last Name" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="text" name="phone_number" placeholder="Phone Number (Optional)">
-            <input type="submit" value="Register">
+            <input type="text" name="fname" placeholder="First Name" required class="form-control">
+            <input type="text" name="lname" placeholder="Last Name" required class="form-control">
+            <input type="email" name="email" placeholder="Email" required class="form-control">
+            <input type="password" name="password" placeholder="Password (min 6 chars)" required class="form-control">
+            <input type="text" name="phone_number" placeholder="Phone Number (Optional)" class="form-control">
+            <input type="submit" value="Register" class="btn btn-success">
         </form>
         <p>Already have an account? <a href="login.php">Login here</a>.</p>
     </div>

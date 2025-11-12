@@ -3,13 +3,45 @@ include 'db.php';
 if (!isset($_SESSION['loggedin'])) { header("Location: login.php"); exit; }
 
 // Get stats
-$totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetch_row()[0];
-$totalUsers    = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
-$maleProducts  = $conn->query("SELECT COUNT(*) FROM products WHERE category = 'male'")->fetch_row()[0];
-$femaleProducts= $conn->query("SELECT COUNT(*) FROM products WHERE category = 'female'")->fetch_row()[0];
+$totalProducts = 0;
+$totalUsers = 0;
+$maleProducts = 0;
+$femaleProducts = 0;
+$recent = [];
+$errorMsg = '';
 
-// Recent products
-$recent = $conn->query("SELECT id, name, price, category, created_at FROM products ORDER BY id DESC LIMIT 5")->fetch_all(MYSQLI_ASSOC);
+try {
+    // Get available columns from the products table
+    $colsRes = $conn->query("SHOW COLUMNS FROM products");
+    $availableCols = [];
+    while ($c = $colsRes->fetch_assoc()) {
+        $availableCols[] = $c['Field'];
+    }
+
+    // Find the correct column name for 'category' and 'name'
+    $categoryCol = array_intersect(['category', 'product_category', 'type'], $availableCols)[0] ?? null;
+    $nameCol = array_intersect(['name', 'product_name', 'title'], $availableCols)[0] ?? 'id';
+
+    // Get stats
+    $totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetch_row()[0];
+    $totalUsers = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
+
+    if ($categoryCol) {
+        $maleProducts = $conn->query("SELECT COUNT(*) FROM products WHERE `$categoryCol` = 'male'")->fetch_row()[0];
+        $femaleProducts = $conn->query("SELECT COUNT(*) FROM products WHERE `$categoryCol` = 'female'")->fetch_row()[0];
+    }
+
+    // Recent products query
+    $selectFields = ["`id`", "`$nameCol` AS `name`", "`price`", "`created_at`"];
+    if ($categoryCol) {
+        $selectFields[] = "`$categoryCol` AS `category`";
+    }
+    $sql = "SELECT " . implode(', ', $selectFields) . " FROM products ORDER BY id DESC LIMIT 5";
+    $recent = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
+
+} catch (mysqli_sql_exception $e) {
+    $errorMsg = "Database error: " . htmlspecialchars($e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -17,37 +49,14 @@ $recent = $conn->query("SELECT id, name, price, category, created_at FROM produc
 <head>
     <meta charset="UTF-8">
     <title>Dashboard - MTP Store</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
-        .navbar { background: #2c3e50; padding: 15px 5%; color: white; display: flex; justify-content: space-between; align-items: center; }
-        .navbar a { color: white; text-decoration: none; margin: 0 10px; font-weight: bold; }
-        .navbar a:hover { color: #1abc9c; }
-        .container { max-width: 1100px; margin: 30px auto; padding: 20px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-        .stat-card i { font-size: 2em; color: #1abc9c; margin-bottom: 10px; }
-        .stat-card h3 { margin: 10px 0; font-size: 1.8em; color: #2c3e50; }
-        .stat-card p { color: #7f8c8d; margin: 0; }
-        .panel { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
-        .panel h3 { margin-top: 0; color: #2c3e50; border-bottom: 2px solid #1abc9c; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8f9fa; color: #2c3e50; }
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8em; }
-        .badge-male { background: #3498db; color: white; }
-        .badge-female { background: #e74c3c; color: white; }
-        .footer { text-align: center; padding: 20px; color: #7f8c8d; font-size: 0.9em; }
-    </style>
 </head>
 <body>
 
 <!-- Navbar -->
 <nav class="navbar">
-    <div>
-        <strong>MTP Store Admin</strong>
-    </div>
+    <a href="index.php" class="logo">MTP Store Admin</a>
     <div>
         <a href="dashboard.php"><i class="fa fa-tachometer-alt"></i> Dashboard</a>
         <a href="list.php"><i class="fa fa-list"></i> Products</a>
@@ -57,10 +66,9 @@ $recent = $conn->query("SELECT id, name, price, category, created_at FROM produc
 </nav>
 
 <div class="container">
-
-    <!-- Welcome -->
-    <h2 style="color:#2c3e50;">Welcome back, <strong><?= htmlspecialchars($_SESSION['fname']) ?></strong>!</h2>
-    <p style="color:#7f8c8d;">Here’s what’s happening in your store today.</p>
+    <h2>Welcome back, <strong><?= htmlspecialchars($_SESSION['fname']) ?></strong>!</h2>
+    <p>Here’s what’s happening in your store today.</p>
+    <?php if ($errorMsg): ?><div class="alert alert-danger"><?= $errorMsg ?></div><?php endif; ?>
 
     <!-- Stats Cards -->
     <div class="stats">
@@ -87,10 +95,10 @@ $recent = $conn->query("SELECT id, name, price, category, created_at FROM produc
     </div>
 
     <!-- Recent Products -->
-    <div class="panel">
+    <div class="recent-products">
         <h3>Recent Products</h3>
         <?php if ($recent): ?>
-            <table>
+            <table class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -106,9 +114,11 @@ $recent = $conn->query("SELECT id, name, price, category, created_at FROM produc
                             <td>#<?= $p['id'] ?></td>
                             <td><?= htmlspecialchars($p['name']) ?></td>
                             <td>$<?= number_format($p['price'], 2) ?></td>
-                            <td>
-                                <span class="badge badge-<?= $p['category'] ?>"><?= ucfirst($p['category']) ?>'s</span>
-                            </td>
+                            <?php if (isset($p['category'])): ?>
+                                <td>
+                                    <span class="badge badge-<?= $p['category'] ?>"><?= ucfirst($p['category']) ?>'s</span>
+                                </td>
+                            <?php endif; ?>
                             <td><?= date('d/m/Y H:i', strtotime($p['created_at'])) ?></td>
                         </tr>
                     <?php endforeach; ?>
@@ -122,7 +132,7 @@ $recent = $conn->query("SELECT id, name, price, category, created_at FROM produc
 </div>
 
 <div class="footer">
-    MTP Store Admin Panel © 2025 | Vietnam Time: <?= date('d M Y, h:i A') ?> (UTC+7)
+    MTP Store Admin Panel © <?= date('Y') ?>
 </div>
 
 </body>
