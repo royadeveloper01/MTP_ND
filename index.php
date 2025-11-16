@@ -1,9 +1,8 @@
 <?php
 include 'db.php';
 
-$category = $_GET['cat'] ?? 'male';
-$category = in_array($category, ['male', 'female']) ? $category : 'male';
-
+// [SỬA] Đổi logic: Mặc định là 'all' để lấy tất cả
+$category = strtolower($_GET['cat'] ?? 'all'); 
 $errorMsg = '';
 $products = [];
 
@@ -36,10 +35,24 @@ try {
     }
 
     if (count($selectFields) > 1) {
-        $sql = "SELECT " . implode(', ', $selectFields) . " FROM products WHERE category = ? ORDER BY id DESC LIMIT 8";
+        // [SỬA] Bắt đầu câu SQL mà không có WHERE
+        $sql = "SELECT " . implode(', ', $selectFields) . " FROM products"; 
+
+        // [SỬA] Chỉ thêm WHERE nếu category là 'male' hoặc 'female'
+        if (in_array($category, ['male', 'female'])) {
+            $sql .= " WHERE category = ?";
+        }
+        
+        $sql .= " ORDER BY id DESC "; // Thêm ORDER BY ở cuối
+
         $stmt = $conn->prepare($sql);
+        
         if ($stmt) {
-            $stmt->bind_param("s", $category);
+            // [SỬA] Chỉ bind_param nếu category đã được chỉ định
+            if (in_array($category, ['male', 'female'])) {
+                $stmt->bind_param("s", $category);
+            }
+            
             $stmt->execute();
             $result = $stmt->get_result();
             $products = $result->fetch_all(MYSQLI_ASSOC);
@@ -84,7 +97,6 @@ try {
     <?php if (!empty($errorMsg)): ?>
         <p style="color:red"><?= $errorMsg ?></p>
     <?php endif; ?>
-
     <?php if ($products): ?>
         <div class="products-grid">
             <?php foreach ($products as $p): ?>
