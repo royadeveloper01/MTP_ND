@@ -148,19 +148,19 @@ try {
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'all' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'all' ? '600' : 'normal' ?>;">
-           Tất cả
+           ALL 
         </a>
         <a href="index.php?cat=male" 
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'male' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'male' ? '600' : 'normal' ?>;">
-           Đồ nam
+           MEN
         </a>
         <a href="index.php?cat=female" 
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'female' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'female' ? '600' : 'normal' ?>;">
-           Đồ nữ
+           WOMEN
         </a>
     </div>
 
