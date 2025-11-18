@@ -1,62 +1,110 @@
 <?php
 include 'db.php';
 
-// [SỬA] Đổi logic: Mặc định là 'all' để lấy tất cả
+/**
+ * [HÀM MỚI] Hàm này để hiển thị một lưới sản phẩm.
+ * Chúng ta tạo hàm này để không phải lặp lại code HTML.
+ */
+function displayProductGrid($products) {
+    if (empty($products)) {
+        return '<p>No products found for this category.</p>';
+    }
+
+    $output = '<div class="products-grid">';
+    foreach ($products as $p) {
+        $name = htmlspecialchars($p['name']);
+        $price = number_format($p['price'], 2);
+        $image = !empty($p['image']) ? htmlspecialchars($p['image']) : '';
+        $desc = !empty($p['description']) ? htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '') : '';
+
+        $output .= '<div class="product-card">';
+        if (!empty($p['image'])) {
+            $output .= '<img src="' . htmlspecialchars($p['image']) . '" alt="' . $name . '">';
+        }
+        $output .= '<h3>' . $name . '</h3>';
+        $output .= '<div class="price">$' . $price . '</div>';
+        if (!empty($p['description'])) {
+            $output .= '<p>' . $desc . '</p>';
+        }
+        $output .= '</div>'; // close product-card
+    }
+    $output .= '</div>'; // close products-grid
+    return $output;
+}
+
+
+// Logic chính bắt đầu
 $category = strtolower($_GET['cat'] ?? 'all'); 
 $errorMsg = '';
-$products = [];
+
+// [SỬA] Khởi tạo các mảng sản phẩm
+$products = [];       // Dùng khi lọc 1 danh mục
+$maleProducts = [];   // Dùng cho trang 'all'
+$femaleProducts = []; // Dùng cho trang 'all'
 
 try {
-    // Get available columns from the products table
+    // 1. Lấy thông tin cột (Giữ nguyên)
     $colsRes = $conn->query("SHOW COLUMNS FROM products");
     $availableCols = [];
     while ($c = $colsRes->fetch_assoc()) {
         $availableCols[] = $c['Field'];
     }
 
-    // Map desired fields to possible database column names and create SELECT aliases
+    // 2. Map tên cột (Giữ nguyên)
     $fieldToColumnMap = [
         'name'        => ['name', 'product_name', 'title'],
         'price'       => ['price', 'cost'],
         'image'       => ['image', 'img', 'image_url', 'photo'],
         'description' => ['description', 'desc', 'details']
     ];
-
-    $selectFields = ['id']; // 'id' is almost always present
-
+    $selectFields = ['id'];
     foreach ($fieldToColumnMap as $alias => $possibleCols) {
         foreach ($possibleCols as $col) {
             if (in_array($col, $availableCols)) {
-                // Add the found column with a consistent alias (e.g., `product_name` AS `name`)
                 $selectFields[] = "`" . str_replace("`", "", $col) . "` AS `" . str_replace("`", "", $alias) . "`";
-                break; // Move to the next field
+                break; 
             }
         }
     }
 
     if (count($selectFields) > 1) {
-        // [SỬA] Bắt đầu câu SQL mà không có WHERE
-        $sql = "SELECT " . implode(', ', $selectFields) . " FROM products"; 
+        // Tạo câu SQL cơ bản
+        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products"; 
 
-        // [SỬA] Chỉ thêm WHERE nếu category là 'male' hoặc 'female'
-        if (in_array($category, ['male', 'female'])) {
-            $sql .= " WHERE category = ?";
-        }
-        
-        $sql .= " ORDER BY id DESC "; // Thêm ORDER BY ở cuối
-
-        $stmt = $conn->prepare($sql);
-        
-        if ($stmt) {
-            // [SỬA] Chỉ bind_param nếu category đã được chỉ định
-            if (in_array($category, ['male', 'female'])) {
-                $stmt->bind_param("s", $category);
-            }
+        // [SỬA] Logic lấy dữ liệu mới
+        if ($category === 'all') {
+            // Nếu là trang 'all', lấy cả 2 nhóm
+            $pageTitle = 'All Products';
             
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $products = $result->fetch_all(MYSQLI_ASSOC);
+            // Lấy đồ nam
+            $sqlMale = $baseSql . " WHERE category = 'male' ORDER BY id DESC";
+            $stmtMale = $conn->prepare($sqlMale);
+            if ($stmtMale) {
+                $stmtMale->execute();
+                $maleProducts = $stmtMale->get_result()->fetch_all(MYSQLI_ASSOC);
+            }
+
+            // Lấy đồ nữ
+            $sqlFemale = $baseSql . " WHERE category = 'female' ORDER BY id DESC";
+            $stmtFemale = $conn->prepare($sqlFemale);
+            if ($stmtFemale) {
+                $stmtFemale->execute();
+                $femaleProducts = $stmtFemale->get_result()->fetch_all(MYSQLI_ASSOC);
+            }
+
+        } elseif (in_array($category, ['male', 'female'])) {
+            // Nếu lọc 1 nhóm (như cũ)
+            $pageTitle = ($category === 'male') ? "Men's Products" : "Women's Products";
+            
+            $sql = $baseSql . " WHERE category = ? ORDER BY id DESC";
+            $stmt = $conn->prepare($sql);
+            if ($stmt) {
+                $stmt->bind_param("s", $category);
+                $stmt->execute();
+                $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); // Chỉ đổ vào mảng $products
+            }
         }
+
     } else {
         $errorMsg = "Could not find required product columns in the database.";
     }
@@ -94,27 +142,51 @@ try {
 </div>
 
 <div class="container" style="background:transparent; box-shadow:none;">
+
+    <div class="category-nav" style="text-align: center; margin-bottom: 30px; font-size: 1.2em;">
+        <a href="index.php?cat=all" 
+           style="padding: 8px 15px; text-decoration: none; color: #333;
+                  border-bottom: 3px solid <?= $category === 'all' ? '#007bff' : 'transparent' ?>;
+                  font-weight: <?= $category === 'all' ? '600' : 'normal' ?>;">
+           Tất cả
+        </a>
+        <a href="index.php?cat=male" 
+           style="padding: 8px 15px; text-decoration: none; color: #333;
+                  border-bottom: 3px solid <?= $category === 'male' ? '#007bff' : 'transparent' ?>;
+                  font-weight: <?= $category === 'male' ? '600' : 'normal' ?>;">
+           Đồ nam
+        </a>
+        <a href="index.php?cat=female" 
+           style="padding: 8px 15px; text-decoration: none; color: #333;
+                  border-bottom: 3px solid <?= $category === 'female' ? '#007bff' : 'transparent' ?>;
+                  font-weight: <?= $category === 'female' ? '600' : 'normal' ?>;">
+           Đồ nữ
+        </a>
+    </div>
+
     <?php if (!empty($errorMsg)): ?>
         <p style="color:red"><?= $errorMsg ?></p>
     <?php endif; ?>
-    <?php if ($products): ?>
-        <div class="products-grid">
-            <?php foreach ($products as $p): ?>
-                <div class="product-card">
-                    <?php if (!empty($p['image'])): ?>
-                        <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>">
-                    <?php endif; ?>
-                    <h3><?= htmlspecialchars($p['name']) ?></h3>
-                    <div class="price">$<?= number_format($p['price'], 2) ?></div>
-                    <?php if (!empty($p['description'])): ?>
-                        <p><?= htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '') ?></p>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php elseif (empty($errorMsg)): ?>
-        <p>No products found.</p>
+
+    <?php if ($category === 'all'): ?>
+        
+        <h2 style="text-align: left; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+            Men's Products
+        </h2>
+        <?= displayProductGrid($maleProducts) ?>
+
+        <h2 style="text-align: left; margin-top: 40px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+            Women's Products
+        </h2>
+        <?= displayProductGrid($femaleProducts) ?>
+
+    <?php else: ?>
+        
+        <h2 style="text-align: center; margin-top: 0;"><?= $pageTitle ?></h2>
+        <?= displayProductGrid($products) ?>
+        
     <?php endif; ?>
+
 </div>
 
 </body>
