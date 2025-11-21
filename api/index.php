@@ -1,5 +1,5 @@
 <?php
-include 'db.php';
+include 'mtp_nd_database/db.php';
 
 /**
  * [HÀM MỚI] Hàm này để hiển thị một lưới sản phẩm.
