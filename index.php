@@ -1,9 +1,10 @@
 <?php
-include 'mtp_nd_database/db.php';
+include 'db.php';
+include 'header.php';
 
 /**
- * [HÀM MỚI] Hàm này để hiển thị một lưới sản phẩm.
- * Chúng ta tạo hàm này để không phải lặp lại code HTML.
+ * [NEW FUNCTION] This function displays a product grid.
+ * We created this function to avoid repeating HTML code.
  */
 function displayProductGrid($products) {
     if (empty($products)) {
@@ -33,24 +34,24 @@ function displayProductGrid($products) {
 }
 
 
-// Logic chính bắt đầu
+// Main logic starts
 $category = strtolower($_GET['cat'] ?? 'all'); 
 $errorMsg = '';
 
-// [SỬA] Khởi tạo các mảng sản phẩm
-$products = [];       // Dùng khi lọc 1 danh mục
-$maleProducts = [];   // Dùng cho trang 'all'
-$femaleProducts = []; // Dùng cho trang 'all'
+// [EDIT] Initialize product arrays
+$products = [];       // Used when filtering a single category
+$maleProducts = [];   // Used for the 'all' page
+$femaleProducts = []; // Used for the 'all' page
 
 try {
-    // 1. Lấy thông tin cột (Giữ nguyên)
+    // 1. Get column info (Keep as is)
     $colsRes = $conn->query("SHOW COLUMNS FROM products");
     $availableCols = [];
     while ($c = $colsRes->fetch_assoc()) {
         $availableCols[] = $c['Field'];
     }
 
-    // 2. Map tên cột (Giữ nguyên)
+    // 2. Map column names (Keep as is)
     $fieldToColumnMap = [
         'name'        => ['name', 'product_name', 'title'],
         'price'       => ['price', 'cost'],
@@ -68,15 +69,15 @@ try {
     }
 
     if (count($selectFields) > 1) {
-        // Tạo câu SQL cơ bản
+        // Create the base SQL query
         $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products"; 
 
-        // [SỬA] Logic lấy dữ liệu mới
+        // [EDIT] New data fetching logic
         if ($category === 'all') {
-            // Nếu là trang 'all', lấy cả 2 nhóm
+            // If it's the 'all' page, get both groups
             $pageTitle = 'All Products';
             
-            // Lấy đồ nam
+            // Get male products
             $sqlMale = $baseSql . " WHERE category = 'male' ORDER BY id DESC";
             $stmtMale = $conn->prepare($sqlMale);
             if ($stmtMale) {
@@ -84,7 +85,7 @@ try {
                 $maleProducts = $stmtMale->get_result()->fetch_all(MYSQLI_ASSOC);
             }
 
-            // Lấy đồ nữ
+            // Get female products
             $sqlFemale = $baseSql . " WHERE category = 'female' ORDER BY id DESC";
             $stmtFemale = $conn->prepare($sqlFemale);
             if ($stmtFemale) {
@@ -93,7 +94,7 @@ try {
             }
 
         } elseif (in_array($category, ['male', 'female'])) {
-            // Nếu lọc 1 nhóm (như cũ)
+            // If filtering one group (as before)
             $pageTitle = ($category === 'male') ? "Men's Products" : "Women's Products";
             
             $sql = $baseSql . " WHERE category = ? ORDER BY id DESC";
@@ -101,7 +102,7 @@ try {
             if ($stmt) {
                 $stmt->bind_param("s", $category);
                 $stmt->execute();
-                $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); // Chỉ đổ vào mảng $products
+                $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); // Only populate the $products array
             }
         }
 
@@ -127,11 +128,11 @@ try {
     <div>
         <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin']): ?>
             <a href="dashboard.php">Dashboard</a>
-            <a href="list.php">Products</a>
-            <a href="logout.php">Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
+            <a href="products/list.php">Products</a>
+            <a href="auth/logout.php">Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
         <?php else: ?>
-            <a href="login.php">Login</a>
-            <a href="register.php">Register</a>
+            <a href="/MTP_ND/auth/login.php">Login</a>
+            <a href="/MTP_ND/auth/register.php">Register</a>
         <?php endif; ?>
     </div>
 </nav>
@@ -191,3 +192,5 @@ try {
 
 </body>
 </html>
+<?php
+include 'footer.php';

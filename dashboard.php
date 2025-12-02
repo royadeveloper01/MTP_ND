@@ -61,7 +61,7 @@ try {
         <a href="dashboard.php"><i class="fa fa-tachometer-alt"></i> Dashboard</a>
         <a href="list.php"><i class="fa fa-list"></i> Products</a>
         <a href="add.php"><i class="fa fa-plus"></i> Add</a>
-        <a href="logout.php"><i class="fa fa-sign-out-alt"></i> Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
+        <a href="auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
     </div>
 </nav>
 

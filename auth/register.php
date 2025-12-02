@@ -1,6 +1,7 @@
 <?php
 // register.php
-include 'db.php'; // Include the database connection file
+include '../db.php'; // Go up one level to find db.php
+include '../header.php';
 
 $message = ''; // Variable to store messages for the user
 
@@ -55,33 +56,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register - MTP Store</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <nav class="navbar">
-        <a href="index.php" class="logo">MTP Store</a>
-        <div>
-            <a href="index.php">Home</a>
-            <a href="login.php">Login</a>
-        </div>
-    </nav>
-    <div class="form-container">
-        <h2>Register</h2>
-        <?= $message ?>
-        <form action="register.php" method="post">
-            <input type="text" name="fname" placeholder="First Name" required class="form-control">
-            <input type="text" name="lname" placeholder="Last Name" required class="form-control">
-            <input type="email" name="email" placeholder="Email" required class="form-control">
-            <input type="password" name="password" placeholder="Password (min 6 chars)" required class="form-control">
-            <input type="text" name="phone_number" placeholder="Phone Number (Optional)" class="form-control">
-            <input type="submit" value="Register" class="btn btn-success">
-        </form>
-        <p>Already have an account? <a href="login.php">Login here</a>.</p>
-    </div>
-</body>
-</html>
+<div class="form-container">
+    <h2>Register</h2>
+    <?php if ($message) echo $message; ?>
+    <form action="register.php" method="post">
+        <input type="text" name="fname" placeholder="First Name" required class="form-control">
+        <input type="text" name="lname" placeholder="Last Name" required class="form-control">
+        <input type="email" name="email" placeholder="Email" required class="form-control">
+        <input type="password" name="password" placeholder="Password (min 6 chars)" required class="form-control">
+        <input type="text" name="phone_number" placeholder="Phone Number (Optional)" class="form-control">
+        <input type="submit" value="Register" class="btn btn-success">
+    </form>
+    <p>Already have an account? <a href="login.php">Login here</a>.</p>
+</div>
+
+<?php include '../footer.php'; ?>
