@@ -14,7 +14,7 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
 <body>
 <div class="container" style="margin:50px auto;">
     <h2>Product List</h2>
-    <a href="add.php" class="btn btn-success">Add New</a>
+
     <a href="index.php" class="btn btn-default">Home</a>
 
     <?php if (isset($_GET['deleted'])): ?>
@@ -33,6 +33,7 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
                     <td>
                         <a href="edit.php?id=<?= $p['id'] ?>" class="btn btn-warning btn-xs">Edit</a>
                         <a href="delete.php?id=<?= $p['id'] ?>" class="btn btn-danger btn-xs">Delete</a>
+                        <a href="add.php" class="btn btn-success">Add New</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

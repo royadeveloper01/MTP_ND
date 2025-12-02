@@ -13,7 +13,7 @@ if ($_POST) {
         'category'    => $_POST['category'] ?? 'male',
         'image'       => trim($_POST['image'] ?? ''),
         'description' => trim($_POST['description'] ?? ''),
-        'quantity'    => trim($_POST['quantity'] ?? '')
+        'quantity'    => 0 // Default quantity to 0 if not provided by form
     ];
 
     if (empty($form_data['name']) || $form_data['price'] <= 0) {
@@ -102,7 +102,6 @@ if ($_POST) {
         <input name="price" type="number" step="0.01" placeholder="Price" class="form-control" required><br>
         <input name="size" placeholder="Size" class="form-control"><br>
         <input name="color" placeholder="Color" class="form-control"><br>
-        <input name="quantity" placeholder="Quantity" class="form-control" type="number" min="0" step="1"><br>
 
         <label for="category" style="margin-bottom: 5px; display:block;">Category *</label>
         <select name="category" id="category" class="form-control" required style="margin-bottom:15px;">
