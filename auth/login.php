@@ -1,6 +1,7 @@
 <?php
 // login.php
-include 'db.php'; // Include the database connection file
+include '../db.php'; // Go up one level to find db.php
+include '../header.php';
 
 $message = ''; // Variable to store messages for the user
 
@@ -37,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $_SESSION['fname'] = $fname;
                     
                     // Redirect user to the dashboard page
-                    header("Location: dashboard.php"); // Redirect to dashboard on successful login
+                    header("Location: ../dashboard.php"); // Redirect to dashboard on successful login
                     exit;
                 } else {
                     // Incorrect password
@@ -58,30 +59,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <link rel="stylesheet" href="style.css">
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body>
-    <nav class="navbar">
-        <a href="index.php" class="logo">MTP Store</a>
-        <div>
-            <a href="index.php">Home</a>
-            <a href="register.php">Register</a>
-        </div>
-    </nav>
-    <div class="form-container">
-        <h2>Login</h2>
-        <?= $message ?>
-        <form action="login.php" method="post">
-            <input type="email" name="email" placeholder="Email" required class="form-control">
-            <input type="password" name="password" placeholder="Password" required class="form-control">
-            <input type="submit" value="Login" class="btn btn-primary">
-        </form>
-        <p>Don't have an account? <a href="register.php">Register here</a>.</p>
-    </div>
-</body>
-</html>
+<div class="form-container">
+    <h2>Login</h2>
+    <?php if ($message): ?>
+        <div class="alert alert-danger"><?= $message ?></div>
+    <?php endif; ?>
+    <form action="login.php" method="post">
+        <input type="email" name="email" placeholder="Email" required class="form-control">
+        <input type="password" name="password" placeholder="Password" required class="form-control">
+        <input type="submit" value="Login" class="btn btn-primary">
+    </form>
+    <p>Don't have an account? <a href="register.php">Register here</a>.</p>
+</div>
+
+<?php include '../footer.php'; ?>
