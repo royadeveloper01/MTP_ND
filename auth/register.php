@@ -1,73 +1,76 @@
 <?php
-// register.php
-include '../db.php'; // Go up one level to find db.php
-include '../header.php';
+// auth/register.php
+session_start();
+require_once __DIR__ . '/../db.php';
 
-$message = ''; // Variable to store messages for the user
+$message = '';
 
-// Check if the form has been submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Retrieve and sanitize form data
-    $fname = isset($_POST['fname']) ? trim($_POST['fname']) : '';
-    $lname = isset($_POST['lname']) ? trim($_POST['lname']) : '';
-    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-    $password = isset($_POST['password']) ? $_POST['password'] : '';
-    $phone_number = isset($_POST['phone_number']) ? trim($_POST['phone_number']) : '';
-    $phone_number = !empty($phone_number) ? $phone_number : null; // Set to null if empty
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fname = trim($_POST['fname'] ?? '');
+    $lname = trim($_POST['lname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $password2 = $_POST['password2'] ?? '';
 
-    // Basic validation
+    // basic validation
     if ($fname === '' || $lname === '' || $email === '' || $password === '') {
-        $message = "Please fill in all required fields.";
+        $message = "Please fill all fields.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = "Invalid email format.";
-    } elseif (strlen($password) < 6) {
-        $message = "Password must be at least 6 characters long.";
+        $message = "Please enter a valid email.";
+    } elseif ($password !== $password2) {
+        $message = "Passwords do not match.";
     } else {
-        try {
-            // Check if email already exists
-            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $stmt->store_result();
-
-            if ($stmt->num_rows > 0) {
-                $message = "An account with this email already exists.";
-                $stmt->close();
+        // check duplicate email
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $message = "Email already registered. Try login or use another email.";
+            $stmt->close();
+        } else {
+            $stmt->close();
+            // hash password
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            $ins = $conn->prepare("INSERT INTO users (fname, lname, email, password) VALUES (?, ?, ?, ?)");
+            $ins->bind_param("ssss", $fname, $lname, $email, $hashed);
+            if ($ins->execute()) {
+                // success -> redirect to login
+                header("Location: login.php?registered=1");
+                exit;
             } else {
-                // Hash the password for security
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-                // Prepare a simple, static INSERT statement
-                $sql = "INSERT INTO users (fname, lname, email, password, phone_number) VALUES (?, ?, ?, ?, ?)";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("sssss", $fname, $lname, $email, $hashed_password, $phone_number);
-
-                if ($stmt->execute()) {
-                    $message = "<div class='alert alert-success'>Registration successful! You can now <a href='login.php'>login</a>.</div>";
-                } else {
-                    $message = "<div class='alert alert-danger'>Error: " . htmlspecialchars($stmt->error) . "</div>";
-                }
-                $stmt->close();
+                $message = "Registration failed. Try again.";
             }
-        } catch (mysqli_sql_exception $e) {
-            $message = "<div class='alert alert-danger'>Database error: " . htmlspecialchars($e->getMessage()) . "</div>";
+            $ins->close();
         }
     }
 }
 ?>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Register</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<?php include '../header.php'; ?>
 
 <div class="form-container">
-    <h2>Register</h2>
-    <?php if ($message) echo $message; ?>
-    <form action="register.php" method="post">
-        <input type="text" name="fname" placeholder="First Name" required class="form-control">
-        <input type="text" name="lname" placeholder="Last Name" required class="form-control">
-        <input type="email" name="email" placeholder="Email" required class="form-control">
-        <input type="password" name="password" placeholder="Password (min 6 chars)" required class="form-control">
-        <input type="text" name="phone_number" placeholder="Phone Number (Optional)" class="form-control">
-        <input type="submit" value="Register" class="btn btn-success">
+    <h2>Create Account</h2>
+    <?php if ($message): ?>
+        <p class="alert-danger"><?=htmlspecialchars($message)?></p>
+    <?php endif; ?>
+    <form method="post">
+        <input class="form-control" name="fname" placeholder="First name" required value="<?=htmlspecialchars($_POST['fname'] ?? '')?>">
+        <input class="form-control" name="lname" placeholder="Last name" required value="<?=htmlspecialchars($_POST['lname'] ?? '')?>">
+        <input class="form-control" name="email" type="email" placeholder="Email" required value="<?=htmlspecialchars($_POST['email'] ?? '')?>">
+        <input class="form-control" name="password" type="password" placeholder="Password" required>
+        <input class="form-control" name="password2" type="password" placeholder="Confirm Password" required>
+        <button class="btn btn-primary" type="submit">Register</button>
     </form>
-    <p>Already have an account? <a href="login.php">Login here</a>.</p>
 </div>
 
 <?php include '../footer.php'; ?>
+</body>
+</html>

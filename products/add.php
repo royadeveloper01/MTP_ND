@@ -1,121 +1,90 @@
 <?php
-include 'db.php';
-if (!isset($_SESSION['loggedin'])) { header("Location: login.php"); exit; }
+// add.php - Admin only (add new product)
+require_once __DIR__ . '/auth_admin.php';
+require_once __DIR__ . '/db.php';
 
+// Handle POST (add product)
 $message = '';
-if ($_POST) {
-    $form_data = [
-        'name'        => trim($_POST['name'] ?? ''),
-        'brand'       => trim($_POST['brand'] ?? ''),
-        'price'       => $_POST['price'] ?? 0,
-        'size'        => trim($_POST['size'] ?? ''),
-        'color'       => trim($_POST['color'] ?? ''),
-        'category'    => $_POST['category'] ?? 'male',
-        'image'       => trim($_POST['image'] ?? ''),
-        'description' => trim($_POST['description'] ?? ''),
-        'quantity'    => trim($_POST['quantity'] ?? '')
-    ];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $price = (float)($_POST['price'] ?? 0);
+    $category = trim($_POST['category'] ?? '');
+    $description = trim($_POST['description'] ?? '');
 
-    if (empty($form_data['name']) || $form_data['price'] <= 0) {
-        $message = "<div class='alert alert-danger'>Name and Price required.</div>";
-    } elseif (!empty($form_data['image']) && !filter_var($form_data['image'], FILTER_VALIDATE_URL)) {
-        $message = "<div class='alert alert-danger'>Invalid Image URL.</div>";
+    // handle image upload (optional)
+    $imagePath = '';
+    if (!empty($_FILES['image']['name'])) {
+        $uploadsDir = __DIR__ . '/uploads/';
+        if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+
+        $tmp = $_FILES['image']['tmp_name'];
+        $origName = basename($_FILES['image']['name']);
+        $ext = pathinfo($origName, PATHINFO_EXTENSION);
+        $safeName = uniqid('img_') . '.' . $ext;
+        $dest = $uploadsDir . $safeName;
+
+        if (move_uploaded_file($tmp, $dest)) {
+            // store path relative to site root
+            $imagePath = 'uploads/' . $safeName;
+        }
+    }
+
+    if ($name === '' || $price <= 0) {
+        $message = "Please provide a valid product name and price.";
     } else {
         try {
-            // Get available columns from the products table
-            $colsRes = $conn->query("SHOW COLUMNS FROM products");
-            $availableCols = [];
-            while ($c = $colsRes->fetch_assoc()) {
-                $availableCols[] = $c['Field'];
-            }
+            $sql = "INSERT INTO products (`name`, `price`, `category`, `description`, `image`) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sdsss", $name, $price, $category, $description, $imagePath);
+            $stmt->execute();
+            $stmt->close();
 
-            // Map form fields to possible database column names
-            $fieldToColumnMap = [
-                'name'        => ['name', 'product_name', 'title'],
-                'brand'       => ['brand'],
-                'price'       => ['price', 'cost'],
-                'size'        => ['size'],
-                'color'       => ['color'],
-                'category'    => ['category'],
-                'image'       => ['image', 'img', 'image_url', 'photo'],
-                'description' => ['description', 'desc', 'details'],
-                'quantity'    => ['quantity'] // Add quantity to the map
-            ];
-
-            $insertCols = [];
-            $insertValues = [];
-            $bindTypes = '';
-
-            foreach ($fieldToColumnMap as $field => $possibleCols) {
-                if (!empty($form_data[$field]) || is_numeric($form_data[$field])) {
-                    foreach ($possibleCols as $col) {
-                        if (in_array($col, $availableCols)) {
-                            $insertCols[] = "`" . str_replace("`", "", $col) . "`";
-                            $insertValues[] = $form_data[$field];
-                            if ($field === 'price') {
-                                $bindTypes .= 'd'; // double for price
-                            } elseif ($field === 'quantity') {
-                                $bindTypes .= 'i'; // integer for quantity
-                            } else {
-                                $bindTypes .= 's'; // string for others
-                            }
-                            break; // Move to the next field
-                        }
-                    }
-                }
-            }
-
-            if (count($insertCols) > 0) {
-                $cols_str = implode(', ', $insertCols);
-                $placeholders = rtrim(str_repeat('?,', count($insertCols)), ',');
-                $sql = "INSERT INTO products ($cols_str) VALUES ($placeholders)";
-
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param($bindTypes, ...$insertValues);
-                $message = $stmt->execute()
-                    ? "<div class='alert alert-success'>Product added successfully!</div>"
-                    : "<div class='alert alert-danger'>Error: " . htmlspecialchars($stmt->error) . "</div>";
-            } else {
-                $message = "<div class='alert alert-danger'>Could not determine which columns to insert into.</div>";
-            }
-        } catch (mysqli_sql_exception $e) {
-            $message = "<div class='alert alert-danger'>Database error: " . htmlspecialchars($e->getMessage()) . "</div>";
+            header("Location: list.php?added=1");
+            exit;
+        } catch (Exception $e) {
+            $message = "Database error: " . htmlspecialchars($e->getMessage());
         }
     }
 }
+
+include __DIR__ . '/header.php';
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Product - MTP Store</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="form-container">
-    <h2>Add Clothing Item</h2>
-    <?= $message ?>
+<div class="container">
+    <h2>Add Product</h2>
+    <?php if ($message): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
 
-    <form method="post">
-        <input name="name" placeholder="Product Name" class="form-control" required><br>
-        <input name="brand" placeholder="Brand" class="form-control"><br>
-        <input name="price" type="number" step="0.01" placeholder="Price" class="form-control" required><br>
-        <input name="size" placeholder="Size" class="form-control"><br>
-        <input name="color" placeholder="Color" class="form-control"><br>
-        <input name="quantity" placeholder="Quantity" class="form-control" type="number" min="0" step="1"><br>
+    <form method="post" enctype="multipart/form-data" style="max-width:700px;">
+        <div class="mb-3">
+            <label class="form-label">Product name</label>
+            <input class="form-control" name="name" required value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
+        </div>
 
-        <label for="category" style="margin-bottom: 5px; display:block;">Category *</label>
-        <select name="category" id="category" class="form-control" required style="margin-bottom:15px;">
-            <option value="male">Men's</option>
-            <option value="female">Women's</option>
-        </select>
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input class="form-control" name="price" type="number" step="0.01" required value="<?= htmlspecialchars($_POST['price'] ?? '') ?>">
+        </div>
 
-        <input name="image" placeholder="Image URL" class="form-control"><br>
-        <textarea name="description" placeholder="Description" class="form-control" rows="3"></textarea><br>
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <input class="form-control" name="category" value="<?= htmlspecialchars($_POST['category'] ?? '') ?>">
+        </div>
 
-        <button class="btn btn-success">Add Product</button>
-        <a href="list.php" class="btn btn-default">Back to List</a>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description"><?= htmlspecialchars($_POST['description'] ?? '') ?></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Image (optional)</label>
+            <input class="form-control" type="file" name="image" accept="image/*">
+        </div>
+
+        <button class="btn btn-primary" type="submit">Add Product</button>
+        <a class="btn btn-secondary" href="list.php">Back to list</a>
     </form>
 </div>
-</body>
-</html>
+
+<?php include __DIR__ . '/footer.php'; ?>

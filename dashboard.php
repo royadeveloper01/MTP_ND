@@ -1,139 +1,70 @@
 <?php
-include 'db.php';
-if (!isset($_SESSION['loggedin'])) { header("Location: login.php"); exit; }
+// db.php - DB connection + safe session start + AUTH_SECRET
+// NOTE: Change AUTH_SECRET to a secure random string before pushing to repo.
 
-// Get stats
-$totalProducts = 0;
-$totalUsers = 0;
-$maleProducts = 0;
-$femaleProducts = 0;
-$recent = [];
-$errorMsg = '';
-
-try {
-    // Get available columns from the products table
-    $colsRes = $conn->query("SHOW COLUMNS FROM products");
-    $availableCols = [];
-    while ($c = $colsRes->fetch_assoc()) {
-        $availableCols[] = $c['Field'];
-    }
-
-    // Find the correct column name for 'category' and 'name'
-    $categoryCol = array_intersect(['category', 'product_category', 'type'], $availableCols)[0] ?? null;
-    $nameCol = array_intersect(['name', 'product_name', 'title'], $availableCols)[0] ?? 'id';
-
-    // Get stats
-    $totalProducts = $conn->query("SELECT COUNT(*) FROM products")->fetch_row()[0];
-    $totalUsers = $conn->query("SELECT COUNT(*) FROM users")->fetch_row()[0];
-
-    if ($categoryCol) {
-        $maleProducts = $conn->query("SELECT COUNT(*) FROM products WHERE `$categoryCol` = 'male'")->fetch_row()[0];
-        $femaleProducts = $conn->query("SELECT COUNT(*) FROM products WHERE `$categoryCol` = 'female'")->fetch_row()[0];
-    }
-
-    // Recent products query
-    $selectFields = ["`id`", "`$nameCol` AS `name`", "`price`", "`created_at`"];
-    if ($categoryCol) {
-        $selectFields[] = "`$categoryCol` AS `category`";
-    }
-    $sql = "SELECT " . implode(', ', $selectFields) . " FROM products ORDER BY id DESC LIMIT 5";
-    $recent = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
-
-} catch (mysqli_sql_exception $e) {
-    $errorMsg = "Database error: " . htmlspecialchars($e->getMessage());
+// If project config exists, load it first so it can set BASE_URL / AUTH_SECRET
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
 }
-?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard - MTP Store</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-</head>
-<body>
+$local_hosts = ['localhost', '127.0.0.1', 'localhost:88', 'mtp_nd.test'];
 
-<!-- Navbar -->
-<nav class="navbar">
-    <a href="index.php" class="logo">MTP Store Admin</a>
-    <div>
-        <a href="dashboard.php"><i class="fa fa-tachometer-alt"></i> Dashboard</a>
-        <a href="list.php"><i class="fa fa-list"></i> Products</a>
-        <a href="add.php"><i class="fa fa-plus"></i> Add</a>
-        <a href="auth/logout.php"><i class="fa fa-sign-out-alt"></i> Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
-    </div>
-</nav>
+// AUTH secret for remember-me HMAC
+if (!defined('AUTH_SECRET')) {
+    define('AUTH_SECRET', 'change_this_to_a_random_32+_char_secret_please!');
+}
 
-<div class="container">
-    <h2>Welcome back, <strong><?= htmlspecialchars($_SESSION['fname']) ?></strong>!</h2>
-    <p>Here’s what’s happening in your store today.</p>
-    <?php if ($errorMsg): ?><div class="alert alert-danger"><?= $errorMsg ?></div><?php endif; ?>
+// ------------------------------
+// Detect/ensure BASE_URL
+// ------------------------------
+// If config defined BASE_URL, keep it. Otherwise detect automatically.
+$script_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+if ($script_path === '') {
+    $script_path = '/';
+}
+if (!defined('BASE_URL')) {
+    // If the site lives in a subfolder like /MTP_ND, this will set that.
+    define('BASE_URL', $script_path);
+}
 
-    <!-- Stats Cards -->
-    <div class="stats">
-        <div class="stat-card">
-            <i class="fa fa-box"></i>
-            <h3><?= $totalProducts ?></h3>
-            <p>Total Products</p>
-        </div>
-        <div class="stat-card">
-            <i class="fa fa-users"></i>
-            <h3><?= $totalUsers ?></h3>
-            <p>Total Users</p>
-        </div>
-        <div class="stat-card">
-            <i class="fa fa-male"></i>
-            <h3><?= $maleProducts ?></h3>
-            <p>Men's Items</p>
-        </div>
-        <div class="stat-card">
-            <i class="fa fa-female"></i>
-            <h3><?= $femaleProducts ?></h3>
-            <p>Women's Items</p>
-        </div>
-    </div>
+// Choose DB config based on host
+if (isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], $local_hosts)) {
+    $host = '127.0.0.1';
+    $user = 'root';
+    $pass = '';
+    $db   = 'mtp_db'; // ensure this matches your local DB name
+} else {
+    $host = 'sql204.infinityfree.com';
+    $user = 'if0_40503929';
+    $pass = 'thisiswebdesign';
+    $db   = 'if0_40503929_mtpnd_database';
+}
 
-    <!-- Recent Products -->
-    <div class="recent-products">
-        <h3>Recent Products</h3>
-        <?php if ($recent): ?>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Category</th>
-                        <th>Added</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recent as $p): ?>
-                        <tr>
-                            <td>#<?= $p['id'] ?></td>
-                            <td><?= htmlspecialchars($p['name']) ?></td>
-                            <td>$<?= number_format($p['price'], 2) ?></td>
-                            <?php if (isset($p['category'])): ?>
-                                <td>
-                                    <span class="badge badge-<?= $p['category'] ?>"><?= ucfirst($p['category']) ?>'s</span>
-                                </td>
-                            <?php endif; ?>
-                            <td><?= date('d/m/Y H:i', strtotime($p['created_at'])) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p>No products yet.</p>
-        <?php endif; ?>
-    </div>
+// --- Start session safely and force session-only cookie ---
+// Only set session cookie params once, and use BASE_URL for path so it is consistent
+if (session_status() === PHP_SESSION_NONE) {
+    $cookieParams = session_get_cookie_params();
 
-</div>
+    // Use BASE_URL as cookie path to avoid cookies being set to subpaths like /auth
+    $cookiePath = (defined('BASE_URL') ? rtrim(BASE_URL, '/') . '/' : ($cookieParams['path'] ?? '/'));
 
-<div class="footer">
-    MTP Store Admin Panel © <?= date('Y') ?>
-</div>
+    session_set_cookie_params([
+        'lifetime' => 0, // session-only
+        'path'     => $cookiePath,
+        'domain'   => $cookieParams['domain'] ?? '',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    session_start();
+}
 
-</body>
-</html>
+// --- Database connection ---
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn) {
+    $conn->set_charset('utf8mb4');
+}
+if ($conn->connect_error) {
+    die("Connection failed: " . htmlspecialchars($conn->connect_error));
+}
