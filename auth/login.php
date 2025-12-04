@@ -110,6 +110,12 @@ if (file_exists(__DIR__ . '/../header.php')) include __DIR__ . '/../header.php';
 
 <div class="form-container">
     <h2>Login</h2>
+
+    <!-- 🔥 Display message sent from add_to_cart.php -->
+    <?php if (!empty($_GET['msg'])): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($_GET['msg']) ?></div>
+    <?php endif; ?>
+
     <?php if ($message): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>

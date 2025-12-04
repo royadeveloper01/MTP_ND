@@ -1,6 +1,22 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// 1️⃣ Nếu chưa login → chuyển tới login + message
+if (empty($_SESSION['loggedin'])) {
+    $msg = urlencode("Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.");
+    header("Location: /MTP_ND/auth/login.php?msg=$msg");
+    exit;
+}
+
+// 2️⃣ Nếu là admin → block luôn
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    $msg = urlencode("Admin không được phép thêm sản phẩm vào giỏ hàng.");
+    header("Location: /MTP_ND/index.php?msg=$msg");
+    exit;
+}
+
+// === GIỮ NGUYÊN CODE CŨ CỦA NHÓM DƯỚI ĐÂY ===
+
 if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
 
 // RECEIVE PRODUCT DATA
