@@ -1,80 +1,120 @@
 <?php
-include 'db.php';
-if (!isset($_SESSION['loggedin'])) { header("Location: login.php"); exit; }
+// edit.php - Admin only (edit existing product)
+require_once __DIR__ . '/auth_admin.php';
+require_once __DIR__ . '/db.php';
 
-$id = (int)($_GET['id'] ?? 0);
-$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$product = $stmt->get_result()->fetch_assoc();
-if (!$product) { header("Location: list.php"); exit; }
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($id <= 0) {
+    header("Location: list.php");
+    exit;
+}
 
 $message = '';
-if ($_POST) {
-    $name        = trim($_POST['name'] ?? '');
-    $brand       = trim($_POST['brand'] ?? '');
-    $price       = $_POST['price'] ?? 0;
-    $size        = trim($_POST['size'] ?? '');
-    $color       = trim($_POST['color'] ?? '');
-    $category    = $_POST['category'] ?? 'male';
-    $image       = trim($_POST['image'] ?? '');
+
+// load current product
+$stmt = $conn->prepare("SELECT id, name, price, category, description, image FROM products WHERE id = ? LIMIT 1");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$res = $stmt->get_result();
+$product = $res->fetch_assoc() ?: null;
+$stmt->close();
+
+if (!$product) {
+    $message = "Product not found.";
+}
+
+// handle update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) {
+    $name = trim($_POST['name'] ?? '');
+    $price = (float)($_POST['price'] ?? 0);
+    $category = trim($_POST['category'] ?? '');
     $description = trim($_POST['description'] ?? '');
 
-    if (!$name || $price <= 0) {
-        $message = "<div class='alert alert-danger'>Name and Price required.</div>";
-    } elseif ($image && !filter_var($image, FILTER_VALIDATE_URL)) {
-        $message = "<div class='alert alert-danger'>Invalid Image URL.</div>";
+    // image upload (optional)
+    $imagePath = $product['image'];
+    if (!empty($_FILES['image']['name'])) {
+        $uploadsDir = __DIR__ . '/uploads/';
+        if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+
+        $tmp = $_FILES['image']['tmp_name'];
+        $origName = basename($_FILES['image']['name']);
+        $ext = pathinfo($origName, PATHINFO_EXTENSION);
+        $safeName = uniqid('img_') . '.' . $ext;
+        $dest = $uploadsDir . $safeName;
+
+        if (move_uploaded_file($tmp, $dest)) {
+            $imagePath = 'uploads/' . $safeName;
+            // optional: unlink old image file (skip to avoid accidental deletion)
+        }
+    }
+
+    if ($name === '' || $price <= 0) {
+        $message = "Please provide valid name and price.";
     } else {
-        $stmt = $conn->prepare(
-            "UPDATE products SET name=?, brand=?, price=?, size=?, color=?, category=?, image=?, description=? WHERE id=?"
-        );
-        $stmt->bind_param("ssdsssssi", $name, $brand, $price, $size, $color, $category, $image, $description, $id);
-        if ($stmt->execute()) {
-            $message = "<div class='alert alert-success'>Updated!</div>";
-            $product = array_merge($product, [
-                'name' => $name, 'brand' => $brand, 'price' => $price,
-                'size' => $size, 'color' => $color, 'category' => $category,
-                'image' => $image, 'description' => $description
-            ]);
-        } else {
-            $message = "<div class='alert alert-danger'>Error: " . htmlspecialchars($stmt->error) . "</div>";
+        try {
+            $sql = "UPDATE products SET name = ?, price = ?, category = ?, description = ?, image = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sdsssi", $name, $price, $category, $description, $imagePath, $id);
+            $stmt->execute();
+            $stmt->close();
+
+            header("Location: list.php?updated=1");
+            exit;
+        } catch (Exception $e) {
+            $message = "Database error: " . htmlspecialchars($e->getMessage());
         }
     }
 }
+
+include __DIR__ . '/header.php';
 ?>
 
-<!DOCTYPE html>
-<html>
-<head><title>Edit Product</title>
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container" style="max-width:600px;margin:50px auto;">
+<div class="container">
     <h2>Edit Product</h2>
-    <?= $message ?>
+    <?php if ($message): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
 
-    <form method="post">
-        <input name="name" value="<?= htmlspecialchars($product['name']) ?>" class="form-control" required><br>
-        <input name="brand" value="<?= htmlspecialchars($product['brand'] ?? '') ?>" class="form-control"><br>
-        <input name="price" type="number" step="0.01" value="<?= $product['price'] ?>" class="form-control" required><br>
-        <input name="size" value="<?= htmlspecialchars($product['size'] ?? '') ?>" class="form-control"><br>
-        <input name="color" value="<?= htmlspecialchars($product['color'] ?? '') ?>" class="form-control"><br>
+    <?php if ($product): ?>
+        <form method="post" enctype="multipart/form-data" style="max-width:700px;">
+            <div class="mb-3">
+                <label class="form-label">Product name</label>
+                <input class="form-control" name="name" required value="<?= htmlspecialchars($product['name'] ?? '') ?>">
+            </div>
 
-        <div class="form-group">
-            <label>Category *</label>
-            <select name="category" class="form-control" required>
-                <option value="male" <?= $product['category'] === 'male' ? 'selected' : '' ?>>Male</option>
-                <option value="female" <?= $product['category'] === 'female' ? 'selected' : '' ?>>Female</option>
-            </select>
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Price</label>
+                <input class="form-control" name="price" type="number" step="0.01" required value="<?= htmlspecialchars($product['price'] ?? '') ?>">
+            </div>
 
-        <input name="image" value="<?= htmlspecialchars($product['image'] ?? '') ?>" placeholder="Image URL" class="form-control"><br>
-        <textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($product['description'] ?? '') ?></textarea><br>
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <input class="form-control" name="category" value="<?= htmlspecialchars($product['category'] ?? '') ?>">
+            </div>
 
-        <button class="btn btn-primary">Update</button>
-        <a href="list.php" class="btn btn-info">List</a>
-        <a href="index.php" class="btn btn-default">Back</a>
-    </form>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="description"><?= htmlspecialchars($product['description'] ?? '') ?></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Current Image</label><br>
+                <?php if (!empty($product['image'])): ?>
+                    <img src="<?= htmlspecialchars($product['image']) ?>" alt="Current image" style="max-width:180px;">
+                <?php else: ?>
+                    <div>No image</div>
+                <?php endif; ?>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Replace image (optional)</label>
+                <input class="form-control" type="file" name="image" accept="image/*">
+            </div>
+
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+            <a class="btn btn-secondary" href="list.php">Back to list</a>
+        </form>
+    <?php endif; ?>
 </div>
-</body>
-</html>
+
+<?php include __DIR__ . '/footer.php'; ?>

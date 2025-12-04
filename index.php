@@ -3,8 +3,7 @@ include 'db.php';
 include 'header.php';
 
 /**
- * [NEW FUNCTION] This function displays a product grid.
- * We created this function to avoid repeating HTML code.
+ * This function displays a product grid.
  */
 function displayProductGrid($products) {
     if (empty($products)) {
@@ -13,71 +12,88 @@ function displayProductGrid($products) {
 
     $output = '<div class="products-grid">';
     foreach ($products as $p) {
+
         $name = htmlspecialchars($p['name']);
-        $price = number_format($p['price'], 2);
+        $priceDisplay = number_format($p['price'], 2);
+        $priceRaw = isset($p['price']) ? floatval($p['price']) : 0;
+
         $image = !empty($p['image']) ? htmlspecialchars($p['image']) : '';
-        $desc = !empty($p['description']) ? htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '') : '';
+        $desc  = !empty($p['description']) 
+                    ? htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '')
+                    : '';
 
         $output .= '<div class="product-card">';
+        
         if (!empty($p['image'])) {
-            $output .= '<img src="' . htmlspecialchars($p['image']) . '" alt="' . $name . '">';
+            $output .= '<img src="' . $image . '" alt="' . $name . '">';
         }
+
         $output .= '<h3>' . $name . '</h3>';
-        $output .= '<div class="price">$' . $price . '</div>';
-        if (!empty($p['description'])) {
+        $output .= '<div class="price">$' . $priceDisplay . '</div>';
+
+        if (!empty($desc)) {
             $output .= '<p>' . $desc . '</p>';
         }
-        $output .= '</div>'; // close product-card
+
+        $pid   = htmlspecialchars($p['id']);
+        $pname = htmlspecialchars($p['name']);
+
+        $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
+        $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
+        $output .= '<input type="hidden" name="name" value="' . $pname . '">';
+        $output .= '<input type="hidden" name="price" value="' . $priceRaw . '">';
+        $output .= '<input type="hidden" name="qty" value="1">';
+        $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+        $output .= '</form>';
+
+        $output .= '</div>';
     }
-    $output .= '</div>'; // close products-grid
+
+    $output .= '</div>';
     return $output;
 }
 
-
-// Main logic starts
+// ---------- MAIN LOGIC ----------
 $category = strtolower($_GET['cat'] ?? 'all'); 
 $errorMsg = '';
 
-// [EDIT] Initialize product arrays
-$products = [];       // Used when filtering a single category
-$maleProducts = [];   // Used for the 'all' page
-$femaleProducts = []; // Used for the 'all' page
+$products = [];
+$maleProducts = [];
+$femaleProducts = [];
 
 try {
-    // 1. Get column info (Keep as is)
+
     $colsRes = $conn->query("SHOW COLUMNS FROM products");
     $availableCols = [];
     while ($c = $colsRes->fetch_assoc()) {
         $availableCols[] = $c['Field'];
     }
 
-    // 2. Map column names (Keep as is)
     $fieldToColumnMap = [
         'name'        => ['name', 'product_name', 'title'],
         'price'       => ['price', 'cost'],
         'image'       => ['image', 'img', 'image_url', 'photo'],
         'description' => ['description', 'desc', 'details']
     ];
+
     $selectFields = ['id'];
+
     foreach ($fieldToColumnMap as $alias => $possibleCols) {
         foreach ($possibleCols as $col) {
             if (in_array($col, $availableCols)) {
-                $selectFields[] = "`" . str_replace("`", "", $col) . "` AS `" . str_replace("`", "", $alias) . "`";
-                break; 
+                $selectFields[] = "`$col` AS `$alias`";
+                break;
             }
         }
     }
 
     if (count($selectFields) > 1) {
-        // Create the base SQL query
-        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products"; 
 
-        // [EDIT] New data fetching logic
+        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products";
+
         if ($category === 'all') {
-            // If it's the 'all' page, get both groups
             $pageTitle = 'All Products';
-            
-            // Get male products
+
             $sqlMale = $baseSql . " WHERE category = 'male' ORDER BY id DESC";
             $stmtMale = $conn->prepare($sqlMale);
             if ($stmtMale) {
@@ -85,7 +101,6 @@ try {
                 $maleProducts = $stmtMale->get_result()->fetch_all(MYSQLI_ASSOC);
             }
 
-            // Get female products
             $sqlFemale = $baseSql . " WHERE category = 'female' ORDER BY id DESC";
             $stmtFemale = $conn->prepare($sqlFemale);
             if ($stmtFemale) {
@@ -94,24 +109,27 @@ try {
             }
 
         } elseif (in_array($category, ['male', 'female'])) {
-            // If filtering one group (as before)
-            $pageTitle = ($category === 'male') ? "Men's Products" : "Women's Products";
-            
+
+            $pageTitle = $category === 'male' ? "Men's Products" : "Women's Products";
+
             $sql = $baseSql . " WHERE category = ? ORDER BY id DESC";
             $stmt = $conn->prepare($sql);
+
             if ($stmt) {
                 $stmt->bind_param("s", $category);
                 $stmt->execute();
-                $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); // Only populate the $products array
+                $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             }
         }
 
     } else {
-        $errorMsg = "Could not find required product columns in the database.";
+        $errorMsg = "Could not find required product columns.";
     }
+
 } catch (mysqli_sql_exception $e) {
     $errorMsg = "Database error: " . htmlspecialchars($e->getMessage());
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -124,12 +142,13 @@ try {
 <body>
 
 <nav class="navbar">
-    <a href="index.php" class="logo">MTP Store</a>
+    <a href="/MTP_ND/index.php" class="logo">MTP Store</a>
+
     <div>
         <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin']): ?>
-            <a href="dashboard.php">Dashboard</a>
-            <a href="products/list.php">Products</a>
-            <a href="auth/logout.php">Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
+            <a href="/MTP_ND/dashboard.php">Dashboard</a>
+            <a href="/MTP_ND/products/list.php">Products</a>
+            <a href="/MTP_ND/auth/logout.php">Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
         <?php else: ?>
             <a href="/MTP_ND/auth/login.php">Login</a>
             <a href="/MTP_ND/auth/register.php">Register</a>
@@ -145,19 +164,19 @@ try {
 <div class="container" style="background:transparent; box-shadow:none;">
 
     <div class="category-nav" style="text-align: center; margin-bottom: 30px; font-size: 1.2em;">
-        <a href="index.php?cat=all" 
+        <a href="/MTP_ND/index.php?cat=all"
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'all' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'all' ? '600' : 'normal' ?>;">
            ALL 
         </a>
-        <a href="index.php?cat=male" 
+        <a href="/MTP_ND/index.php?cat=male"
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'male' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'male' ? '600' : 'normal' ?>;">
            MEN
         </a>
-        <a href="index.php?cat=female" 
+        <a href="/MTP_ND/index.php?cat=female"
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'female' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'female' ? '600' : 'normal' ?>;">
@@ -170,27 +189,29 @@ try {
     <?php endif; ?>
 
     <?php if ($category === 'all'): ?>
-        
-        <h2 style="text-align: left; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+
+        <h2 style="text-align:left; margin-top:20px; border-bottom:2px solid #eee; padding-bottom:10px;">
             Men's Products
         </h2>
         <?= displayProductGrid($maleProducts) ?>
 
-        <h2 style="text-align: left; margin-top: 40px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        <h2 style="text-align:left; margin-top:40px; border-bottom:2px solid #eee; padding-bottom:10px;">
             Women's Products
         </h2>
         <?= displayProductGrid($femaleProducts) ?>
 
     <?php else: ?>
-        
-        <h2 style="text-align: center; margin-top: 0;"><?= $pageTitle ?></h2>
+
+        <h2 style="text-align:center; margin-top:0;"><?= $pageTitle ?></h2>
         <?= displayProductGrid($products) ?>
-        
+
     <?php endif; ?>
 
 </div>
 
 </body>
 </html>
+
 <?php
 include 'footer.php';
+?>
