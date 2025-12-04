@@ -3,7 +3,7 @@
 -- Version: 2.0 (Full Relationships)
 -- =================================================================
 
--- 1. Bảng Users (Khách hàng)
+-- 1. Users Table (Customers)
 -- -----------------------------------------------------------------
 DROP DATABASE IF EXISTS MTP_ND;
 CREATE DATABASE MTP_ND;
@@ -20,7 +20,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2. Bảng Products (Sản phẩm)
+-- 2. Products Table
 -- -----------------------------------------------------------------
 CREATE TABLE `products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -38,9 +38,9 @@ CREATE TABLE `products` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. Bảng Cart (Giỏ hàng)
+-- 3. Cart Table (Shopping Cart)
 -- -----------------------------------------------------------------
--- Liên kết: User (1) - Cart (N), Product (1) - Cart (N)
+-- Relationships: User (1) - Cart (N), Product (1) - Cart (N)
 CREATE TABLE `cart` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -55,9 +55,9 @@ CREATE TABLE `cart` (
   CONSTRAINT `fk_cart_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Bảng Orders (Đơn hàng tổng quát)
+-- 4. Orders Table (General Order Info)
 -- -----------------------------------------------------------------
--- Liên kết: User (1) - Orders (N)
+-- Relationships: User (1) - Orders (N)
 CREATE TABLE `orders` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
@@ -73,15 +73,15 @@ CREATE TABLE `orders` (
   CONSTRAINT `fk_order_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. Bảng Order Items (Chi tiết sản phẩm trong đơn hàng)
+-- 5. Order Items Table (Order Details)
 -- -----------------------------------------------------------------
--- Liên kết: Order (1) - Order Items (N), Product (1) - Order Items (N)
+-- Relationships: Order (1) - Order Items (N), Product (1) - Order Items (N)
 CREATE TABLE `order_items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `order_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
-  `price` decimal(10,2) NOT NULL, -- Lưu giá tại thời điểm mua
+  `price` decimal(10,2) NOT NULL, -- Stores price at the time of purchase
   PRIMARY KEY (`id`),
   KEY `idx_item_order` (`order_id`),
   KEY `idx_item_product` (`product_id`),
