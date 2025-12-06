@@ -1,25 +1,4 @@
 <?php
-<<<<<<< HEAD
-// ----------------------------------------
-// CẤU HÌNH CHO LOCALHOST (Laragon)
-// ----------------------------------------
-$host = "localhost";
-$user = "root";
-$pass = "";         // Laragon mặc định không có pass
-$db   = "mtp_nd";   // Tên DB chữ thường như bạn thấy trong Laragon
-
-// Tạo kết nối
-$conn = new mysqli($host, $user, $pass, $db);
-
-// Kiểm tra lỗi
-if ($conn->connect_error) {
-    die("Lỗi kết nối database: " . $conn->connect_error);
-}
-
-// Nếu chạy ngon lành thì dòng dưới sẽ hiện ra (bỏ comment để test)
-// echo "Kết nối thành công!";
-?>
-=======
 // db.php - DB connection + safe session start + AUTH_SECRET
 // NOTE: Change AUTH_SECRET to a secure random string before pushing to repo.
 
@@ -81,4 +60,3 @@ if ($conn) {
 if ($conn->connect_error) {
     die("Connection failed: " . htmlspecialchars($conn->connect_error));
 }
->>>>>>> 9182fb56d90aa441d77a007b8dab42c638e41d04
