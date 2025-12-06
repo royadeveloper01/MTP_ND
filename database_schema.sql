@@ -3,9 +3,9 @@
 -- Version: 2.0
 -- =================================================================
 
-DROP DATABASE IF EXISTS MTP_DB;
-CREATE DATABASE MTP_DB;
-USE MTP_DB;
+DROP DATABASE IF EXISTS mtp_db;
+CREATE DATABASE mtp_db;
+USE mtp_db;
 
 -- 1. Users Table
 -- -----------------------------------------------------------------
@@ -85,4 +85,4 @@ CREATE TABLE order_items (
   CONSTRAINT fk_detail_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   CONSTRAINT fk_detail_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-mmtp_dbtp_dbmtp_db
+-- =================================================================

@@ -88,11 +88,17 @@ try {
     $stats['products'] = $result ? $result->fetch_assoc()['count'] : 0;
 
     // Get cart count
-    $result = $conn->query("SELECT COUNT(*) as count FROM cart WHERE user_id = $user_id");
-    $stats['cart_items'] = $result ? $result->fetch_assoc()['count'] : 0;
+   $stmt = $conn->prepare("SELECT COUNT(*) as count FROM cart WHERE user_id = ?");  
+$stmt->bind_param('i', $user_id);  
+$stmt->execute();  
+$result = $stmt->get_result();  
+$stats['cart_items'] = $result ? $result->fetch_assoc()['count'] : 0;  
 
     // Get order count
-    $result = $conn->query("SELECT COUNT(*) as count FROM orders WHERE user_id = $user_id");
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM orders WHERE user_id = ?");
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     $stats['orders'] = $result ? $result->fetch_assoc()['count'] : 0;
 } catch (Exception $e) {
     $errors[] = "Error loading dashboard data: " . $e->getMessage();
