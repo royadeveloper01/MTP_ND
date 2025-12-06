@@ -14,7 +14,7 @@ CREATE TABLE users (
   fname VARCHAR(100) NOT NULL,
   lname VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL,
+  password_hash CHAR(60) NOT NULL, -- Changed to store hashed passwords (e.g., bcrypt)
   phone_number VARCHAR(20),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
@@ -22,20 +22,41 @@ CREATE TABLE users (
 
 -- 2. Products Table
 -- -----------------------------------------------------------------
+CREATE TABLE categories (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE products (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
   brand VARCHAR(100),
-  price DECIMAL(10,2) NOT NULL,
-  quantity INT NOT NULL DEFAULT 0,
-  size VARCHAR(50),
-  color VARCHAR(50),
-  category ENUM('male','female') NOT NULL DEFAULT 'male',
-  image VARCHAR(255),
+  category_id INT NOT NULL,
   description TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  INDEX idx_product_name (name),
+  CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES categories(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- New: Product Variants Table for handling Size, Color, Price, Quantity
+-- -----------------------------------------------------------------
+CREATE TABLE product_variants (
+  id INT NOT NULL AUTO_INCREMENT,
+  product_id INT NOT NULL,
+  size VARCHAR(50),
+  color VARCHAR(50),
+  price DECIMAL(10,2) NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
+  sku VARCHAR(100) UNIQUE, -- Stock Keeping Unit
+  image_url VARCHAR(255),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_product_variant (product_id, size, color),
+  CONSTRAINT fk_variant_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 3. Cart Table
@@ -43,15 +64,15 @@ CREATE TABLE products (
 CREATE TABLE cart (
   id INT NOT NULL AUTO_INCREMENT,
   user_id INT NOT NULL,
-  product_id INT NOT NULL,
+  variant_id INT NOT NULL,
   quantity INT NOT NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   INDEX idx_cart_user (user_id),
-  INDEX idx_cart_product (product_id),
+  UNIQUE KEY uk_cart_item (user_id, variant_id), -- A user can only have one cart row per variant
   CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_cart_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+  CONSTRAINT fk_cart_variant FOREIGN KEY (variant_id) REFERENCES product_variants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 4. Orders Table
@@ -76,13 +97,12 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
   id INT NOT NULL AUTO_INCREMENT,
   order_id INT NOT NULL,
-  product_id INT NOT NULL,
+  variant_id INT NOT NULL,
   quantity INT NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (id),
   INDEX idx_item_order (order_id),
-  INDEX idx_item_product (product_id),
   CONSTRAINT fk_detail_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-  CONSTRAINT fk_detail_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+  CONSTRAINT fk_detail_variant FOREIGN KEY (variant_id) REFERENCES product_variants(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- =================================================================
