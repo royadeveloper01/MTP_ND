@@ -1,9 +1,14 @@
 <?php
 include '../db.php';
 
-if (!isset($_SESSION['loggedin'])) { 
-    header("Location: ../auth/login.php"); 
-    exit; 
+if (empty($_SESSION['loggedin'])) {
+    header("Location: ../auth/login.php");
+    exit;
+}
+
+// Generate a CSRF token if one doesn't exist
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(MYSQLI_ASSOC);
@@ -24,6 +29,10 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
     <?php if (isset($_GET['deleted'])): ?>
         <div class="alert alert-success">Deleted!</div>
     <?php endif; ?>
+    
+    <?php if (isset($_GET['error'])): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
+    <?php endif; ?>
 
     <table class="table table-bordered" style="margin-top:20px;">
         <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Action</th></tr></thead>
@@ -36,7 +45,11 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
                     <td><?= ucfirst($p['category']) ?></td>
                     <td>
                         <a href="edit.php?id=<?= $p['id'] ?>" class="btn btn-warning btn-xs">Edit</a>
-                        <a href="delete.php?id=<?= $p['id'] ?>" class="btn btn-danger btn-xs">Delete</a>
+                        <form method="POST" action="delete.php" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                            <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                            <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                        </form>
                     </td>
                 </tr>
             <?php endforeach; ?>

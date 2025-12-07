@@ -38,13 +38,14 @@ function displayProductGrid($products) {
         $pid   = htmlspecialchars($p['id']);
         $pname = htmlspecialchars($p['name']);
 
-        $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
-        $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
-        $output .= '<input type="hidden" name="name" value="' . $pname . '">';
-        $output .= '<input type="hidden" name="price" value="' . $priceRaw . '">';
-        $output .= '<input type="hidden" name="qty" value="1">';
-        $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
-        $output .= '</form>';
+        // Only show 'Add to cart' button for non-admin users who are logged in
+        if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
+            $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
+            $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
+            $output .= '<input type="hidden" name="qty" value="1">';
+            $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+            $output .= '</form>';
+        }
 
         $output .= '</div>';
     }
@@ -140,21 +141,6 @@ try {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<nav class="navbar">
-    <a href="/MTP_ND/index.php" class="logo">MTP Store</a>
-
-    <div>
-        <?php if (isset($_SESSION['loggedin']) && $_SESSION['loggedin']): ?>
-            <a href="/MTP_ND/dashboard.php">Dashboard</a>
-            <a href="/MTP_ND/products/list.php">Products</a>
-            <a href="/MTP_ND/auth/logout.php">Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)</a>
-        <?php else: ?>
-            <a href="/MTP_ND/auth/login.php">Login</a>
-            <a href="/MTP_ND/auth/register.php">Register</a>
-        <?php endif; ?>
-    </div>
-</nav>
 
 <div class="hero">
     <h1>Welcome to MTP Store</h1>
