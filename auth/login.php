@@ -54,6 +54,13 @@ if (!isset($_SESSION['loggedin']) && !empty($_COOKIE['rememberme'])) {
 
 // Handle POST
 $message = '';
+$success_message = '';
+
+// Check for registration success message
+if (isset($_GET['registered']) && $_GET['registered'] == '1') {
+    $success_message = 'Registration successful! You can now log in.';
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -65,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = 'Please enter a valid email address.';
     } else {
         try {
-            $sql = "SELECT id, fname, password, role FROM users WHERE email = ? LIMIT 1";
+            $sql = "SELECT id, fname, password_hash FROM users WHERE email = ? LIMIT 1";
             $stmt = $conn->prepare($sql);
             if (!$stmt) throw new Exception("Prepare failed");
             $stmt->bind_param("s", $email);
@@ -73,14 +80,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmt->store_result();
 
             if ($stmt->num_rows > 0) {
-                $stmt->bind_result($id, $fname, $hashed_password, $role);
+                $stmt->bind_result($id, $fname, $hashed_password);
                 $stmt->fetch();
 
                 if ($hashed_password !== null && password_verify($password, $hashed_password)) {
                     $_SESSION['loggedin'] = true;
                     $_SESSION['id']       = $id;
                     $_SESSION['fname']    = $fname;
-                    $_SESSION['role']     = $role ?? 'user';
+                    $_SESSION['role']     = 'user'; // Set a default role
 
                     if ($remember) {
                         $uid   = (int)$id;
@@ -112,6 +119,9 @@ if (file_exists(__DIR__ . '/../header.php')) include __DIR__ . '/../header.php';
     <h2>Login</h2>
     <?php if ($message): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
+    <?php if ($success_message): ?>
+        <div class="alert alert-success"><?= htmlspecialchars($success_message) ?></div>
     <?php endif; ?>
 
     <form action="login.php" method="post">
