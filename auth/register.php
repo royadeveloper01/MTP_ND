@@ -11,9 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $password2 = $_POST['password2'] ?? '';
+    $phone_number = trim($_POST['phone_number'] ?? '');
 
     // basic validation
-    if ($fname === '' || $lname === '' || $email === '' || $password === '') {
+    if ($fname === '' || $lname === '' || $email === '' || $password === '' || $phone_number === '') {
         $message = "Please fill all fields.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Please enter a valid email.";
@@ -32,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
             // hash password
             $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $ins = $conn->prepare("INSERT INTO users (fname, lname, email, password) VALUES (?, ?, ?, ?)");
-            $ins->bind_param("ssss", $fname, $lname, $email, $hashed);
+            $ins = $conn->prepare("INSERT INTO users (fname, lname, email, password_hash, phone_number) VALUES (?, ?, ?, ?, ?)"); // Corrected SQL
+            $ins->bind_param("sssss", $fname, $lname, $email, $hashed, $phone_number);
             if ($ins->execute()) {
                 // success -> redirect to login
                 header("Location: login.php?registered=1");
@@ -67,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input class="form-control" name="email" type="email" placeholder="Email" required value="<?=htmlspecialchars($_POST['email'] ?? '')?>">
         <input class="form-control" name="password" type="password" placeholder="Password" required>
         <input class="form-control" name="password2" type="password" placeholder="Confirm Password" required>
+        <input type="tel"  class="form-control" name="phone_number" placeholder="Phone Number" required value="<?=htmlspecialchars($_POST['phone_number'] ?? '')?>">
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
 </div>
