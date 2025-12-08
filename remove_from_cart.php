@@ -1,10 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$id = $_GET['id'] ?? null;
+$key = $_GET['key'] ?? null;
 
-if ($id && isset($_SESSION['cart'][$id])) {
-    unset($_SESSION['cart'][$id]);
+if ($key && isset($_SESSION['cart'][$key])) {
+    unset($_SESSION['cart'][$key]);
 }
 
 header("Location: cart.php");

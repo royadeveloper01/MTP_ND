@@ -20,7 +20,12 @@ try {
     // --- Use Session Cart and Verify with DB ---
     if (!empty($_SESSION['cart'])) {
         $session_cart = $_SESSION['cart'];
-        $product_ids = array_keys($session_cart);
+        // Extract unique product IDs from the session cart keys
+        $product_ids = [];
+        foreach ($session_cart as $cart_key => $item) {
+            $product_ids[] = $item['product_id'];
+        }
+        $product_ids = array_unique($product_ids);
 
         // Create placeholders for the IN clause
         $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
@@ -39,13 +44,15 @@ try {
         }
 
         // Build the final cart item list, ensuring products exist and using DB price
-        foreach ($session_cart as $product_id => $item) {
+        foreach ($session_cart as $cart_key => $item) {
+            $product_id = $item['product_id'];
             if (isset($product_map[$product_id])) {
                 $product = $product_map[$product_id];
                 $cart_items[] = [
-                    'id' => $product_id,
+                    'cart_key' => $cart_key,
                     'name' => $product['name'],
                     'price' => (float)$product['price'], // Authoritative price from DB
+                    'size' => $item['size'],
                     'quantity' => (int)$item['qty']
                 ];
             }
@@ -74,7 +81,7 @@ include 'header.php';
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th>
+                        <th>Product</th><th>Size</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,20 +91,21 @@ include 'header.php';
                     ?>
                     <tr>
                         <td><?= htmlspecialchars($item['name']) ?></td>
+                        <td><?= $item['size'] !== 'default' ? htmlspecialchars($item['size']) : 'N/A' ?></td>
                         <td>$<?= number_format($item['price'], 2) ?></td>
                         <td>
-                            <input type="number" name="qty[<?= $item['id'] ?>]" value="<?= (int)$item['quantity'] ?>" min="1" class="form-control" style="width: 80px;">
+                            <input type="number" name="qty[<?= $item['cart_key'] ?>]" value="<?= (int)$item['quantity'] ?>" min="1" class="form-control" style="width: 80px;">
                         </td>
                         <td>$<?= number_format($subtotal, 2) ?></td>
                         <td>
-                            <a href="remove_from_cart.php?id=<?= $item['id'] ?>" class="btn btn-danger btn-sm">Remove</a> <!-- This correctly removes from session -->
+                            <a href="remove_from_cart.php?key=<?= $item['cart_key'] ?>" class="btn btn-danger btn-sm">Remove</a> <!-- This correctly removes from session -->
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
                         <td colspan="2"><strong>$<?= number_format($total, 2) ?></strong></td>
                     </tr>
                 </tfoot>

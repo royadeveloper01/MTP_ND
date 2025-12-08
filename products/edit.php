@@ -12,7 +12,7 @@ if ($id <= 0) {
 $message = '';
 
 // load current product
-$stmt = $conn->prepare("SELECT id, name, price, category, description, image FROM products WHERE id = ? LIMIT 1");
+$stmt = $conn->prepare("SELECT id, name, price, category, description, sizes, image FROM products WHERE id = ? LIMIT 1");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $res = $stmt->get_result();
@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) {
     $price = (float)($_POST['price'] ?? 0);
     $category = trim($_POST['category'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $sizes = trim($_POST['sizes'] ?? '');
     // Handle image URL. If new image is posted, use it, otherwise keep the old one.
     // If a new image URL is submitted, use it. Otherwise, keep the existing one.
     $imagePath = trim($_POST['image'] ?? $product['image']);
@@ -37,9 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) {
         $message = "Please provide valid name and price.";
     } else {
         try {
-            $sql = "UPDATE products SET name = ?, price = ?, category = ?, description = ?, image = ? WHERE id = ?";
+            $sql = "UPDATE products SET name = ?, price = ?, category = ?, description = ?, sizes = ?, image = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sdsssi", $name, $price, $category, $description, $imagePath, $id);
+            $stmt->bind_param("sdssssi", $name, $price, $category, $description, $sizes, $imagePath, $id);
             $stmt->execute();
             $stmt->close();
 
@@ -89,6 +90,12 @@ include __DIR__ . '/../header.php';
             <div class="mb-3">
                 <label class="form-label">Description</label>
                 <textarea class="form-control" name="description"><?= htmlspecialchars($product['description'] ?? '') ?></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Sizes</label>
+                <input type="text" class="form-control" name="sizes" placeholder="e.g., S, M, L, XL" value="<?= htmlspecialchars($product['sizes'] ?? '') ?>">
+                <div class="form-text">Enter available sizes, separated by commas.</div>
             </div>
 
             <div class="mb-3">

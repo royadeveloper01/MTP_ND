@@ -17,6 +17,7 @@ function displayProductGrid($products) {
         $priceDisplay = number_format($p['price'], 2);
         $priceRaw = isset($p['price']) ? floatval($p['price']) : 0;
 
+        $sizes = !empty($p['sizes']) ? array_map('trim', explode(',', $p['sizes'])) : [];
         $image = !empty($p['image']) ? htmlspecialchars($p['image']) : '';
         $desc  = !empty($p['description']) 
                     ? htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '')
@@ -40,10 +41,21 @@ function displayProductGrid($products) {
 
         // Only show 'Add to cart' button for non-admin users who are logged in
         if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
-            $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
+            $output .= '<form method="post" action="add_to_cart.php" class="mt-2">';
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
-            $output .= '<input type="hidden" name="qty" value="1">';
-            $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+            if (!empty($sizes)) {
+                $output .= '<div class="input-group input-group-sm">';
+                $output .= '<select name="size" class="form-select" required>';
+                $output .= '<option value="">Select Size</option>';
+                foreach ($sizes as $size) {
+                    $output .= '<option value="' . htmlspecialchars($size) . '">' . htmlspecialchars($size) . '</option>';
+                }
+                $output .= '</select>';
+                $output .= '<button type="submit" class="btn btn-primary">Add</button>';
+                $output .= '</div>';
+            } else {
+                $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+            }
             $output .= '</form>';
         }
 
@@ -74,7 +86,8 @@ try {
         'name'        => ['name', 'product_name', 'title'],
         'price'       => ['price', 'cost'],
         'image'       => ['image', 'img', 'image_url', 'photo'],
-        'description' => ['description', 'desc', 'details']
+        'description' => ['description', 'desc', 'details'],
+        'sizes'       => ['sizes']
     ];
 
     $selectFields = ['id'];

@@ -36,6 +36,7 @@ CREATE TABLE products (
   price DECIMAL(10,2) NOT NULL,
   category VARCHAR(50) NULL, -- e.g., 'male', 'female'
   description TEXT NULL,
+  sizes VARCHAR(255) NULL, -- Comma-separated list of sizes, e.g., "S,M,L,XL"
   image VARCHAR(2048) NULL, -- Stores the image URL
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -79,6 +80,7 @@ CREATE TABLE order_items (
   id INT NOT NULL AUTO_INCREMENT,
   order_id INT NOT NULL,
   product_id INT NOT NULL,
+  size VARCHAR(50) NOT NULL, -- The specific size chosen for the item
   quantity INT NOT NULL,
   price DECIMAL(10,2) NOT NULL, -- Stores the price at the time of purchase
   PRIMARY KEY (id),

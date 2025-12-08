@@ -10,15 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = (float)($_POST['price'] ?? 0);
     $category = trim($_POST['category'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $sizes = trim($_POST['sizes'] ?? ''); // Get sizes
     $imagePath = trim($_POST['image'] ?? ''); // Get image URL from POST
     
     if ($name === '' || $price <= 0) {
         $message = "Please provide a valid product name and price.";
     } else {
         try {
-            $sql = "INSERT INTO products (`name`, `price`, `category`, `description`, `image`) VALUES (?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO products (`name`, `price`, `category`, `description`, `sizes`, `image`) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sdsss", $name, $price, $category, $description, $imagePath);
+            $stmt->bind_param("sdssss", $name, $price, $category, $description, $sizes, $imagePath);
             $stmt->execute();
             $stmt->close();
 
@@ -67,6 +68,12 @@ include __DIR__ . '/../header.php';
         <div class="mb-3">
             <label class="form-label">Description</label>
             <textarea class="form-control" name="description"><?= htmlspecialchars($_POST['description'] ?? '') ?></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Sizes</label>
+            <input type="text" class="form-control" name="sizes" placeholder="e.g., S, M, L, XL" value="<?= htmlspecialchars($_POST['sizes'] ?? '') ?>">
+            <div class="form-text">Enter available sizes, separated by commas.</div>
         </div>
 
         <div class="mb-3">
