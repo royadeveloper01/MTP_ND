@@ -1,7 +1,7 @@
 <?php
 // add.php - Admin only (add new product)
-require_once __DIR__ . '/auth_admin.php';
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/../auth/auth_admin.php';
+require_once __DIR__ . '/../db.php';
 
 // Handle POST (add product)
 $message = '';
@@ -10,25 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = (float)($_POST['price'] ?? 0);
     $category = trim($_POST['category'] ?? '');
     $description = trim($_POST['description'] ?? '');
-
-    // handle image upload (optional)
-    $imagePath = '';
-    if (!empty($_FILES['image']['name'])) {
-        $uploadsDir = __DIR__ . '/uploads/';
-        if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
-
-        $tmp = $_FILES['image']['tmp_name'];
-        $origName = basename($_FILES['image']['name']);
-        $ext = pathinfo($origName, PATHINFO_EXTENSION);
-        $safeName = uniqid('img_') . '.' . $ext;
-        $dest = $uploadsDir . $safeName;
-
-        if (move_uploaded_file($tmp, $dest)) {
-            // store path relative to site root
-            $imagePath = 'uploads/' . $safeName;
-        }
-    }
-
+    $imagePath = trim($_POST['image'] ?? ''); // Get image URL from POST
+    
     if ($name === '' || $price <= 0) {
         $message = "Please provide a valid product name and price.";
     } else {
@@ -47,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-include __DIR__ . '/header.php';
+include __DIR__ . '/../header.php';
 ?>
 
 <div class="container">
@@ -56,7 +39,7 @@ include __DIR__ . '/header.php';
         <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
 
-    <form method="post" enctype="multipart/form-data" style="max-width:700px;">
+    <form method="post" style="max-width:700px;">
         <div class="mb-3">
             <label class="form-label">Product name</label>
             <input class="form-control" name="name" required value="<?= htmlspecialchars($_POST['name'] ?? '') ?>">
@@ -69,7 +52,16 @@ include __DIR__ . '/header.php';
 
         <div class="mb-3">
             <label class="form-label">Category</label>
-            <input class="form-control" name="category" value="<?= htmlspecialchars($_POST['category'] ?? '') ?>">
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="category" id="category_male" value="male" <?= (($_POST['category'] ?? '') === 'male') ? 'checked' : '' ?> required>
+                    <label class="form-check-label" for="category_male">Male</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="category" id="category_female" value="female" <?= (($_POST['category'] ?? '') === 'female') ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="category_female">Female</label>
+                </div>
+            </div>
         </div>
 
         <div class="mb-3">
@@ -78,8 +70,8 @@ include __DIR__ . '/header.php';
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Image (optional)</label>
-            <input class="form-control" type="file" name="image" accept="image/*">
+            <label class="form-label">Image</label>
+            <input type="url" placeholder="https://example.com/image.jpg" class="form-control" name="image" value="<?= htmlspecialchars($_POST['image'] ?? '') ?>">
         </div>
 
         <button class="btn btn-primary" type="submit">Add Product</button>
@@ -87,4 +79,4 @@ include __DIR__ . '/header.php';
     </form>
 </div>
 
-<?php include __DIR__ . '/footer.php'; ?>
+<?php include __DIR__ . '/../footer.php'; ?>

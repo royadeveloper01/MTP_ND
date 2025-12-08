@@ -30,17 +30,17 @@ if (!isset($_SESSION['loggedin']) && !empty($_COOKIE['rememberme'])) {
         $hmac    = $parts[1];
         $uid     = base64_decode($uid_b64);
         if ($uid && hash_equals(remember_token_for($uid), $hmac)) {
-            $stmt = $conn->prepare("SELECT id, fname, role FROM users WHERE id = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT id, fname, is_admin FROM users WHERE id = ? LIMIT 1");
             if ($stmt) {
                 $stmt->bind_param("i", $uid);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 if ($result && $result->num_rows === 1) {
                     $row = $result->fetch_assoc();
-                    $_SESSION['loggedin'] = true;
+                    $_SESSION['loggedin'] = true; 
                     $_SESSION['id']       = $row['id'];
                     $_SESSION['fname']    = $row['fname'];
-                    $_SESSION['role']     = $row['role'] ?? 'user';
+                    $_SESSION['is_admin'] = (bool)$row['is_admin'];
                     header("Location: " . $PROJECT_ROOT . "/index.php");
                     exit;
                 }
@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $message = 'Please enter a valid email address.';
     } else {
         try {
-            $sql = "SELECT id, fname, password_hash FROM users WHERE email = ? LIMIT 1";
+            $sql = "SELECT id, fname, password_hash, is_admin FROM users WHERE email = ? LIMIT 1";
             $stmt = $conn->prepare($sql);
             if (!$stmt) throw new Exception("Prepare failed");
             $stmt->bind_param("s", $email);
@@ -80,14 +80,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmt->store_result();
 
             if ($stmt->num_rows > 0) {
-                $stmt->bind_result($id, $fname, $hashed_password);
+                $stmt->bind_result($id, $fname, $hashed_password, $is_admin);
                 $stmt->fetch();
 
                 if ($hashed_password !== null && password_verify($password, $hashed_password)) {
                     $_SESSION['loggedin'] = true;
                     $_SESSION['id']       = $id;
                     $_SESSION['fname']    = $fname;
-                    $_SESSION['role']     = 'user'; // Set a default role
+                    $_SESSION['is_admin'] = (bool)$is_admin;
 
                     if ($remember) {
                         $uid   = (int)$id;

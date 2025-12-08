@@ -29,9 +29,13 @@ require_once __DIR__ . '/db.php';
           <a class="nav-link" href="/MTP_ND/dashboard.php">Dashboard</a>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="/MTP_ND/products/list.php">Products</a>
-        </li>
+        <?php if (!empty($_SESSION['is_admin'])): ?>
+            <li class="nav-item">
+              <a class="nav-link" href="/MTP_ND/products/list.php">Products</a>
+            </li>
+        <?php else: ?>
+            <li class="nav-item"><a class="nav-link" href="/MTP_ND/cart.php">Cart</a></li>
+        <?php endif; ?>
 
         <?php if (!empty($_SESSION['loggedin'])): ?>
             <li class="nav-item">

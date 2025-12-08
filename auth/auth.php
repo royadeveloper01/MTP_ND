@@ -22,7 +22,7 @@ if (!isset($_SESSION['loggedin']) && isset($_COOKIE['rememberme'])) {
         $hmac = $parts[1];
 
         if ($uid && hash_equals(remember_token_for($uid), $hmac)) {
-            $stmt = $conn->prepare("SELECT id, fname, role FROM users WHERE id = ? LIMIT 1");
+            $stmt = $conn->prepare("SELECT id, fname, is_admin FROM users WHERE id = ? LIMIT 1");
             $stmt->bind_param("i", $uid);
             $stmt->execute();
             $res = $stmt->get_result();
@@ -32,7 +32,7 @@ if (!isset($_SESSION['loggedin']) && isset($_COOKIE['rememberme'])) {
                 $_SESSION['loggedin'] = true;
                 $_SESSION['id']       = $row['id'];
                 $_SESSION['fname']    = $row['fname'];
-                $_SESSION['role']     = $row['role'] ?? 'user';
+                $_SESSION['is_admin'] = (bool)($row['is_admin'] ?? false);
             }
             $stmt->close();
         } else {
@@ -48,7 +48,7 @@ function require_admin() {
         header("Location: " . BASE_URL . "/auth/login.php");
         exit;
     }
-    if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    if (empty($_SESSION['is_admin'])) {
         header("HTTP/1.1 403 Forbidden");
         echo "403 Forbidden - you do not have permission to access this page.";
         exit;

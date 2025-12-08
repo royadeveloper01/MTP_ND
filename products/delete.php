@@ -1,11 +1,23 @@
 <?php
 // delete.php - Admin only (delete product by id)
-require_once __DIR__ . '/auth_admin.php';
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/../auth/auth_admin.php';
+require_once __DIR__ . '/../db.php';
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: list.php?error=Invalid request method.");
+    exit;
+}
+
+// Validate CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    header("Location: list.php?error=Invalid CSRF token.");
+    exit;
+}
+
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if ($id <= 0) {
-    header("Location: list.php");
+    header("Location: list.php?error=Invalid product ID.");
     exit;
 }
 
