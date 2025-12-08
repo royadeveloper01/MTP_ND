@@ -22,12 +22,8 @@ $is_in_transaction = false;
 
 try {
     // --- Verify products and calculate final total from DB prices ---
-    $product_ids = array_keys($cart);
     if (!empty($cart)) {
-        $product_ids = [];
-        foreach ($cart as $cart_key => $item) {
-            $product_ids[] = $item['product_id'];
-        }
+        $product_ids = array_unique(array_column($cart, 'product_id')); // More concise
         // Create placeholders for the IN clause
         $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
         $types = str_repeat('i', count($product_ids));
@@ -55,6 +51,7 @@ try {
                         'id' => $product_id,
                         'name' => $product['name'],
                         'size' => $item['size'],
+                        'color' => $item['color'],
                         'price' => (float)$product['price'], // Use price from DB
                         'quantity' => $quantity
                     ];
@@ -83,9 +80,9 @@ try {
     $stmt->close();
 
     // 2. Insert into `order_items` table
-    $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, size, quantity, price) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, size, color, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
     foreach ($final_items as $item) {
-        $stmt->bind_param('iisid', $order_id, $item['id'], $item['size'], $item['quantity'], $item['price']);
+        $stmt->bind_param('iissid', $order_id, $item['id'], $item['size'], $item['color'], $item['quantity'], $item['price']);
         $stmt->execute();
     }
     $stmt->close();
@@ -126,7 +123,7 @@ include __DIR__ . '/header.php';
                 <ul class="list-group list-group-flush">
                     <?php foreach ($final_items as $item): ?>
                         <li class="list-group-item">
-                            <?= htmlspecialchars($item['name']) ?> (<?= htmlspecialchars($item['size']) ?>) &times; <?= (int)$item['quantity'] ?>
+                            <?= htmlspecialchars($item['name']) ?> (<?= htmlspecialchars($item['size']) ?>, <?= htmlspecialchars($item['color']) ?>) &times; <?= (int)$item['quantity'] ?>
                             (Subtotal: $<?= number_format($item['price'] * $item['quantity'], 2) ?>)
                         </li>
                     <?php endforeach; ?>

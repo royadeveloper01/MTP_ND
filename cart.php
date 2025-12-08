@@ -20,12 +20,8 @@ try {
     // --- Use Session Cart and Verify with DB ---
     if (!empty($_SESSION['cart'])) {
         $session_cart = $_SESSION['cart'];
-        // Extract unique product IDs from the session cart keys
-        $product_ids = [];
-        foreach ($session_cart as $cart_key => $item) {
-            $product_ids[] = $item['product_id'];
-        }
-        $product_ids = array_unique($product_ids);
+        // Extract unique product IDs from the session cart using array_column
+        $product_ids = array_unique(array_column($session_cart, 'product_id'));
 
         // Create placeholders for the IN clause
         $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
@@ -53,6 +49,7 @@ try {
                     'name' => $product['name'],
                     'price' => (float)$product['price'], // Authoritative price from DB
                     'size' => $item['size'],
+                    'color' => $item['color'],
                     'quantity' => (int)$item['qty']
                 ];
             }
@@ -81,7 +78,7 @@ include 'header.php';
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Product</th><th>Size</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th>
+                        <th>Product</th><th>Size</th><th>Color</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,6 +89,7 @@ include 'header.php';
                     <tr>
                         <td><?= htmlspecialchars($item['name']) ?></td>
                         <td><?= $item['size'] !== 'default' ? htmlspecialchars($item['size']) : 'N/A' ?></td>
+                        <td><?= $item['color'] !== 'default' ? htmlspecialchars($item['color']) : 'N/A' ?></td>
                         <td>$<?= number_format($item['price'], 2) ?></td>
                         <td>
                             <input type="number" name="qty[<?= $item['cart_key'] ?>]" value="<?= (int)$item['quantity'] ?>" min="1" class="form-control" style="width: 80px;">
@@ -105,7 +103,7 @@ include 'header.php';
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                        <td colspan="5" class="text-end"><strong>Total:</strong></td>
                         <td colspan="2"><strong>$<?= number_format($total, 2) ?></strong></td>
                     </tr>
                 </tfoot>

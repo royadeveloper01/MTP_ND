@@ -90,6 +90,11 @@ try {
                     <p class="stat-number"><?php echo $stats['customers']; ?></p>
                     <a href="<?php echo BASE_URL; ?>/customers.php">Manage Customers</a>
                 </div>
+                <div class="stat-card">
+                    <h3>Attributes</h3>
+                    <p class="stat-number"><?= ($conn->query("SELECT COUNT(*) FROM sizes")->fetch_row()[0] ?? 0) + ($conn->query("SELECT COUNT(*) FROM colors")->fetch_row()[0] ?? 0) ?></p>
+                    <a href="<?php echo BASE_URL; ?>/attributes.php">Manage Sizes & Colors</a>
+                </div>
             <?php else: ?>
                 <div class="stat-card">
                     <h3>Total Products</h3>

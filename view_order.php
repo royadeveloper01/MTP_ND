@@ -44,7 +44,7 @@ try {
 
     // Fetch the items associated with this order
     $stmt = $conn->prepare(
-        "SELECT oi.quantity, oi.price, oi.size, p.name 
+        "SELECT oi.quantity, oi.price, oi.size, oi.color, p.name 
          FROM order_items oi 
          JOIN products p ON oi.product_id = p.id 
          WHERE oi.order_id = ?"
@@ -119,6 +119,7 @@ include __DIR__ . '/header.php';
                             <tr>
                                 <th>Product</th>
                                 <th>Size</th>
+                                <th>Color</th>
                                 <th>Quantity</th>
                                 <th>Price per Item</th>
                                 <th>Subtotal</th>
@@ -129,6 +130,7 @@ include __DIR__ . '/header.php';
                             <tr>
                                 <td><?= htmlspecialchars($item['name']) ?></td>
                                 <td><?= htmlspecialchars($item['size']) ?></td>
+                                <td><?= htmlspecialchars($item['color']) ?></td>
                                 <td><?= (int)$item['quantity'] ?></td>
                                 <td>$<?= number_format($item['price'], 2) ?></td>
                                 <td>$<?= number_format($item['price'] * $item['quantity'], 2) ?></td>
