@@ -1,0 +1,32 @@
+name: Deploy to InfinityFree
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  web-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest code
+        uses: actions/checkout@v4
+
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # InfinityFree requires your files to be inside 'htdocs'
+          # This line tells the action to put files INTO that folder
+          server-dir: /htdocs/
+          
+          # This prevents the action from deleting your config files on the server
+          # useful if you have a connection.php that is different on live server
+          exclude: |
+            **/.git*
+            **/.github*
+            README.md
+            .gitignore
