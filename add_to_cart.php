@@ -1,25 +1,54 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/db.php'; // Includes session_start()
 
-if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
-
-// RECEIVE PRODUCT DATA
-$id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;
-$name = isset($_POST['name']) ? trim($_POST['name']) : '';
-$price = isset($_POST['price']) ? floatval($_POST['price']) : 0;
-$qty = isset($_POST['qty']) ? intval($_POST['qty']) : 1;
-
-if (!$id) {
-    // fallback redirect
+// Admins can't add to cart
+if (!empty($_SESSION['is_admin'])) {
     header("Location: index.php");
     exit;
 }
 
-// ADD to session cart
-if (!isset($_SESSION['cart'][$id])) {
-    $_SESSION['cart'][$id] = ['name' => $name, 'price' => $price, 'qty' => $qty];
+// RECEIVE PRODUCT DATA
+$product_id = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
+$qty = filter_input(INPUT_POST, 'qty', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]);
+
+if (!$product_id) {
+    header("Location: index.php");
+    exit;
+}
+
+// --- LOGIC: DB for logged-in users, Session for guests ---
+
+if (!empty($_SESSION['loggedin'])) {
+    // --- LOGGED-IN USER: Use database ---
+    $user_id = $_SESSION['id'];
+
+    try {
+        // Use INSERT...ON DUPLICATE KEY UPDATE to add or update quantity
+        $sql = "INSERT INTO cart (user_id, product_id, quantity) 
+                VALUES (?, ?, ?) 
+                ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('iii', $user_id, $product_id, $qty);
+        $stmt->execute();
+        $stmt->close();
+
+    } catch (Exception $e) {
+        // Optional: handle DB error, e.g., log it or show a message
+    }
+
 } else {
-    $_SESSION['cart'][$id]['qty'] += $qty;
+    // --- GUEST USER: Use session ---
+    $name = trim($_POST['name'] ?? '');
+    $price = (float)($_POST['price'] ?? 0);
+
+    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
+
+    if (!isset($_SESSION['cart'][$product_id])) {
+        $_SESSION['cart'][$product_id] = ['name' => $name, 'price' => $price, 'qty' => $qty];
+    } else {
+        $_SESSION['cart'][$product_id]['qty'] += $qty;
+    }
 }
 
 // REDIRECT TO CART PAGE
