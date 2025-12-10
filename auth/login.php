@@ -96,6 +96,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         setcookie('rememberme', $value, time() + (30*24*60*60), $COOKIE_PATH, "", false, true);
                     }
 
+                    // --- Merge session cart with DB cart ---
+                    if (!empty($_SESSION['cart']) && is_array($_SESSION['cart']) && !$is_admin) {
+                        $user_id = $id;
+                        try {
+                            $sql = "INSERT INTO cart (user_id, product_id, quantity) 
+                                    VALUES (?, ?, ?) 
+                                    ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)";
+                            $stmt = $conn->prepare($sql);
+
+                            foreach ($_SESSION['cart'] as $product_id => $item) {
+                                $pid = (int)$product_id;
+                                $qty = (int)$item['qty'];
+                                if ($pid > 0 && $qty > 0) {
+                                    $stmt->bind_param('iii', $user_id, $pid, $qty);
+                                    $stmt->execute();
+                                }
+                            }
+                            $stmt->close();
+                            unset($_SESSION['cart']); // Clear session cart after merging
+                        } catch (Exception $e) {
+                            // Could log this error, but for now we'll continue
+                        }
+                    }
+
                     // IMPORTANT: redirect to site index (main UI), NOT auth/dashboard
                     header("Location: " . $PROJECT_ROOT . "/index.php");
                     exit;

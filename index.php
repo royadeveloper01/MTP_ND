@@ -38,10 +38,12 @@ function displayProductGrid($products) {
         $pid   = htmlspecialchars($p['id']);
         $pname = htmlspecialchars($p['name']);
 
-        // Only show 'Add to cart' button for non-admin users who are logged in
-        if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
+        // Only show 'Add to cart' button if user is NOT an admin
+        if (empty($_SESSION['is_admin'])) {
             $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
+            $output .= '<input type="hidden" name="name" value="' . $pname . '">';
+            $output .= '<input type="hidden" name="price" value="' . $priceRaw . '">';
             $output .= '<input type="hidden" name="qty" value="1">';
             $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
             $output .= '</form>';
@@ -133,14 +135,8 @@ try {
 
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Welcome to MTP Store</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<!-- Custom styles for index page -->
+<link rel="stylesheet" href="style.css">
 
 <div class="hero">
     <h1>Welcome to MTP Store</h1>
@@ -150,19 +146,19 @@ try {
 <div class="container" style="background:transparent; box-shadow:none;">
 
     <div class="category-nav" style="text-align: center; margin-bottom: 30px; font-size: 1.2em;">
-        <a href="/MTP_ND/index.php?cat=all"
+        <a href="<?= BASE_URL ?>/index.php?cat=all"
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'all' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'all' ? '600' : 'normal' ?>;">
            ALL 
         </a>
-        <a href="/MTP_ND/index.php?cat=male"
+        <a href="<?= BASE_URL ?>/index.php?cat=male"
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'male' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'male' ? '600' : 'normal' ?>;">
            MEN
         </a>
-        <a href="/MTP_ND/index.php?cat=female"
+        <a href="<?= BASE_URL ?>/index.php?cat=female"
            style="padding: 8px 15px; text-decoration: none; color: #333;
                   border-bottom: 3px solid <?= $category === 'female' ? '#007bff' : 'transparent' ?>;
                   font-weight: <?= $category === 'female' ? '600' : 'normal' ?>;">
@@ -194,9 +190,6 @@ try {
     <?php endif; ?>
 
 </div>
-
-</body>
-</html>
 
 <?php
 include 'footer.php';
