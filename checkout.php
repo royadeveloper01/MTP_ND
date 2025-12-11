@@ -7,14 +7,24 @@ if (empty($_SESSION['loggedin']) || !empty($_SESSION['is_admin'])) {
     exit;
 }
 
-// Cart must not be empty
-if (empty($_SESSION['cart'])) {
+$user_id = $_SESSION['id'];
+$cart = [];
+
+// Fetch cart from DB since user is logged in
+$stmt = $conn->prepare("SELECT product_id, quantity FROM cart WHERE user_id = ?");
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $cart[$row['product_id']] = ['qty' => $row['quantity']];
+}
+$stmt->close();
+
+if (empty($cart)) {
     header('Location: ' . BASE_URL . '/cart.php');
     exit;
 }
 
-$user_id = $_SESSION['id'];
-$cart = $_SESSION['cart'];
 $final_items = [];
 $final_total = 0;
 $error = '';
@@ -84,12 +94,15 @@ try {
     }
     $stmt->close();
 
-    // 3. Commit transaction
+    // 3. Clear the cart
+    $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $stmt->close();
+
+    // 4. Commit transaction
     $conn->commit();
     $is_in_transaction = false;
-
-    // 4. Clear the cart
-    unset($_SESSION['cart']);
 
 } catch (Exception $e) {
     if ($is_in_transaction) {

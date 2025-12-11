@@ -16,7 +16,7 @@ require_once __DIR__ . '/db.php';
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0a437cff;">
   <div class="container-fluid">
 
-    <a class="navbar-brand" href="/MTP_ND/index.php">MTP Store</a>
+    <a class="navbar-brand" href="<?= BASE_URL ?>/index.php">MTP Store</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarNav">
@@ -28,26 +28,28 @@ require_once __DIR__ . '/db.php';
       <ul class="navbar-nav">
 
         <li class="nav-item">
-          <a class="nav-link" href="/MTP_ND/dashboard.php">Dashboard</a>
+          <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
         </li>
 
         <?php if (!empty($_SESSION['is_admin'])): ?>
             <li class="nav-item">
-              <a class="nav-link" href="/MTP_ND/products/list.php">Products</a>
+              <a class="nav-link" href="<?= BASE_URL ?>/products/list.php">Manage Products</a>
             </li>
         <?php else: ?>
-            <li class="nav-item"><a class="nav-link" href="/MTP_ND/cart.php">Cart</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="<?= BASE_URL ?>/index.php">Shop</a>
+            </li>
         <?php endif; ?>
 
         <?php if (!empty($_SESSION['loggedin'])): ?>
             <li class="nav-item">
-              <a class="nav-link" href="/MTP_ND/auth/logout.php">
+              <a class="nav-link" href="<?= BASE_URL ?>/auth/logout.php">
                 Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)
               </a>
             </li>
         <?php else: ?>
             <li class="nav-item">
-              <a class="nav-link" href="/MTP_ND/auth/login.php">Login</a>
+              <a class="nav-link" href="<?= BASE_URL ?>/auth/login.php">Login</a>
             </li>
         <?php endif; ?>
 

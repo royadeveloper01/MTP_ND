@@ -1,14 +1,9 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/db.php'; // Includes session_start()
 
-// Redirect if not logged in or if user is an admin
-if (empty($_SESSION['loggedin'])) {
-    header("Location: auth/login.php");
-    exit;
-}
+// Admins should not see a cart page
 if (!empty($_SESSION['is_admin'])) {
-    header("Location: dashboard.php");
+    header('Location: ' . BASE_URL . '/dashboard.php');
     exit;
 }
 
@@ -63,6 +58,18 @@ $cartCount = is_array($cart_items) ? count($cart_items) : 0;
 
 include 'header.php';
 ?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cart</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{padding:20px;}
+    .btn{text-decoration:none;}
+  </style>
+</head>
+<body>
 
 <style>
     body {
@@ -289,4 +296,5 @@ include 'header.php';
     <?php endif; ?>
 </div>
 
-<?php include 'footer.php'; ?>
+</body>
+</html>
