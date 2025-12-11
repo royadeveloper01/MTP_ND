@@ -12,7 +12,7 @@ $user_id  = $_SESSION['id'] ?? null;
 $username = isset($_SESSION['fname']) && $_SESSION['fname'] !== '' ? $_SESSION['fname'] : 'User';
 $is_admin = !empty($_SESSION['is_admin']);
 
-// Prepare default stats to tránh undefined
+// Prepare default stats to avoid undefined errors
 $stats = [
     'products'   => 0,
     'orders'     => 0,
@@ -70,8 +70,6 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MTP_ND</title>
-    <!-- Giả sử Bootstrap đã được include trong header.php -->
-    
     <style>
         body {
             background-color: #f5f7fb;
@@ -198,7 +196,6 @@ try {
     <?php include 'header.php'; ?>
     
     <div class="container dashboard-wrapper">
-        <!-- Tiêu đề -->
         <div class="dashboard-title">
             <div>
                 <h1>
@@ -222,7 +219,6 @@ try {
             </div>
         </div>
         
-        <!-- Error -->
         <?php if (!empty($errors)): ?>
             <div class="alert alert-danger">
                 <?php foreach ($errors as $error): ?>
@@ -231,7 +227,6 @@ try {
             </div>
         <?php endif; ?>
         
-        <!-- Stats -->
         <div class="dashboard-stats">
             <?php if ($is_admin): ?>
                 <div class="stat-card">
@@ -292,34 +287,31 @@ try {
             <?php endif; ?>
         </div>
         
-        <!-- Quick links -->
         <div class="dashboard-actions row">
             <div class="col-lg-8 mb-3">
                 <div class="card">
                     <div class="card-body">
                         <h2>Quick Links</h2>
                         <ul class="list-unstyled quick-links mb-0">
-    <li class="d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-shop me-2"></i>Shop</span>
-        <a href="<?php echo BASE_URL; ?>/index.php" class="btn btn-sm btn-outline-primary">Go</a>
-    </li>
-    <?php if (!$is_admin): ?>
-        <li class="d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-cart4 me-2"></i>Shopping Cart</span>
-            <a href="<?php echo BASE_URL; ?>/cart.php" class="btn btn-sm btn-outline-secondary">View</a>
-        </li>
-    <?php endif; ?>
-    <li class="d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-box-arrow-right me-2"></i>Logout</span>
-        <a href="<?php echo BASE_URL; ?>/auth/logout.php" class="btn btn-sm btn-outline-danger">Logout</a>
-    </li>
-</ul>
-
+                            <li class="d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-shop me-2"></i>Shop</span>
+                                <a href="<?php echo BASE_URL; ?>/index.php" class="btn btn-sm btn-outline-primary">Go</a>
+                            </li>
+                            <?php if (!$is_admin): ?>
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-cart4 me-2"></i>Shopping Cart</span>
+                                    <a href="<?php echo BASE_URL; ?>/cart.php" class="btn btn-sm btn-outline-secondary">View</a>
+                                </li>
+                            <?php endif; ?>
+                            <li class="d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-box-arrow-right me-2"></i>Logout</span>
+                                <a href="<?php echo BASE_URL; ?>/auth/logout.php" class="btn btn-sm btn-outline-danger">Logout</a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
 
-            <!-- Box nhỏ tóm tắt -->
             <div class="col-lg-4 mb-3">
                 <div class="card">
                     <div class="card-body">
