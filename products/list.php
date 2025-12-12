@@ -24,9 +24,10 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
 <head>
     <title>Product List</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/css/admin-forms.css" rel="stylesheet">
 </head>
 <body>
-<div class="container" style="margin:50px auto;">
+<div class="container main-content">
     <h2>Product List</h2>
     <a href="add.php" class="btn btn-success">Add New</a>
     <a href="../index.php" class="btn btn-default">Home</a>
@@ -39,7 +40,7 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
         <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
     <?php endif; ?>
 
-    <table class="table table-bordered" style="margin-top:20px;">
+    <table class="table table-bordered product-list-table">
         <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Action</th></tr></thead>
         <tbody>
             <?php foreach ($products as $p): ?>
@@ -50,7 +51,7 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
                     <td><?= ucfirst($p['category']) ?></td>
                     <td>
                         <a href="edit.php?id=<?= $p['id'] ?>" class="btn btn-warning btn-xs">Edit</a>
-                        <form method="POST" action="delete.php" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <form method="POST" action="delete.php" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this product?');">
                             <input type="hidden" name="id" value="<?= $p['id'] ?>">
                             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                             <button type="submit" class="btn btn-danger btn-xs">Delete</button>
