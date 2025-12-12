@@ -1,5 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/db.php';
 
 if (isset($_POST['qty'])) {
     foreach ($_POST['qty'] as $cart_key => $qty) {
