@@ -7,7 +7,7 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-// luôn luôn khởi tạo các biến để tránh undefined
+// Always initialize variables to avoid `undefined` errors.
 $cart_items = [];
 $total      = 0;
 $error      = '';
@@ -53,7 +53,7 @@ try {
     $error = "Error loading cart details: " . $e->getMessage();
 }
 
-// số lượng item để show badge, luôn safe
+// Get the number of items to display in the badge, ensuring it's always safe. 
 $cartCount = is_array($cart_items) ? count($cart_items) : 0;
 
 include 'header.php';
@@ -71,110 +71,7 @@ include 'header.php';
 </head>
 <body>
 
-<style>
-    body {
-        background-color: #f5f7fb;
-    }
-
-    .cart-page {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-    .cart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .cart-header h1 {
-        margin: 0;
-        font-size: 1.6rem;
-        font-weight: 600;
-    }
-
-    .cart-subtitle {
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-
-    .cart-badge {
-        padding: 0.35rem 0.8rem;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        background-color: #e7f1ff;
-        color: #0d6efd;
-    }
-
-    .cart-card {
-        border-radius: 1rem;
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
-        border: none;
-    }
-
-    .cart-card .card-header {
-        border-bottom: none;
-        background-color: #ffffff;
-        border-radius: 1rem 1rem 0 0;
-        padding-bottom: 0;
-    }
-
-    .cart-table thead th {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #6c757d;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.3);
-    }
-
-    .cart-table td {
-        vertical-align: middle;
-    }
-
-    .cart-summary-title {
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .cart-total-label {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    .cart-total-value {
-        font-size: 1.4rem;
-        font-weight: 700;
-    }
-
-    .empty-cart-card {
-        border-radius: 1rem;
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
-        border: none;
-        text-align: center;
-        padding: 2.5rem 1.5rem;
-        background-color: #ffffff;
-    }
-
-    .empty-cart-card h2 {
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .empty-cart-card p {
-        color: #6c757d;
-        margin-bottom: 1rem;
-    }
-
-    @media (max-width: 576px) {
-        .cart-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
-</style>
+<link rel="stylesheet" href="assets/css/cart.css">
 
 <div class="container cart-page">
     <!-- Header -->
@@ -228,10 +125,6 @@ include 'header.php';
                                     </thead>
                                     <tbody>
                                         <?php foreach ($cart_items as $item): ?>
-                                            <?php
-                                                $subtotal = $item['price'] * $item['quantity'];
-                                                $total   += $subtotal;
-                                            ?>
                                             <tr>
                                                 <td><?= htmlspecialchars($item['name']) ?></td>
                                                 <td>$<?= number_format($item['price'], 2) ?></td>
@@ -244,7 +137,7 @@ include 'header.php';
                                                         class="form-control form-control-sm"
                                                     >
                                                 </td>
-                                                <td>$<?= number_format($subtotal, 2) ?></td>
+                                                <td>$<?= number_format($item['price'] * $item['quantity'], 2) ?></td>
                                                 <td class="text-center">
                                                     <a
                                                         href="remove_from_cart.php?id=<?= $item['id'] ?>"
