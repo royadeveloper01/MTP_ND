@@ -32,6 +32,6 @@ session_destroy();
 // Delete remember cookie (same path)
 setcookie('rememberme', '', time() - 3600, $COOKIE_PATH, "", false, true);
 
-// Redirect to login page
-header("Location: " . $PROJECT_ROOT . "/auth/login.php");
+// Redirect to homepage
+header("Location: " . $PROJECT_ROOT . "/index.php");
 exit;

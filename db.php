@@ -13,12 +13,11 @@ if (!defined('AUTH_SECRET')) {
 // NEW: Detect BASE_URL automatically (ONLY IF NOT DEFINED)
 // ------------------------------
 if (!defined('BASE_URL')) {
-    $script_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-    if ($script_path === '') {
-        $script_path = '/';
-    }
-    define('BASE_URL', $script_path); 
-    // Example: "/MTP_ND" or "/"
+    $doc_root = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+    $dir_root = rtrim(str_replace('\\', '/', __DIR__), '/');
+    
+    $base = str_replace($doc_root, '', $dir_root);
+    define('BASE_URL', $base);
 }
 
 // Choose DB config based on host

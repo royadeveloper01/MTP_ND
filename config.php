@@ -2,8 +2,13 @@
 // MTP_ND/config.php - project-wide config
 
 if (!defined('BASE_URL')) {
-    // Đặt theo folder project trên localhost. Nếu tên folder khác thì đổi cho phù hợp.
-    define('BASE_URL', '/MTP_ND');
+    // Calculate BASE_URL relative to the server document root
+    $doc_root = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+    $dir_root = rtrim(str_replace('\\', '/', __DIR__), '/');
+    
+    // Remove doc_root from dir_root to get the relative path
+    $base = str_replace($doc_root, '', $dir_root);
+    define('BASE_URL', $base);
 }
 
 if (!defined('AUTH_SECRET')) {

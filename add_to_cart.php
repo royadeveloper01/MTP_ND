@@ -1,7 +1,11 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
+// Admins can't add to cart
+if (!empty($_SESSION['is_admin'])) {
+    header('Location: ' . BASE_URL . '/index.php');
+    exit;
+}
 
 // RECEIVE PRODUCT DATA
 $id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;
@@ -26,5 +30,5 @@ if (!isset($_SESSION['cart'][$cart_key])) {
 }
 
 // REDIRECT TO CART PAGE
-header("Location: cart.php");
+header('Location: ' . BASE_URL . '/cart.php');
 exit;
