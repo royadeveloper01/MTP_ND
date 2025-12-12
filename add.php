@@ -103,9 +103,7 @@ include __DIR__ . '/../header.php';
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Description</label>
-                <textarea class="form-control" name="description" rows="3">
-                    <?= htmlspecialchars($_POST['description'] ?? '') ?>
-                </textarea>
+                <textarea class="form-control" name="description" rows="3"><?= htmlspecialchars($_POST['description'] ?? '') ?></textarea>
             </div>
 
             <div class="mb-3">
@@ -120,7 +118,7 @@ include __DIR__ . '/../header.php';
                 <div id="previewPlaceholder" class="preview-placeholder">
                     Image Preview
                 </div>
-                <img id="previewImg" src="#" class="preview-img" style="display:none;">
+            <img id="previewImg" src="#" class="preview-img hidden">
             </div>
 
             <button class="btn btn-primary w-100 mt-3">
@@ -147,11 +145,12 @@ input.addEventListener("input", () => {
 
     if (finalUrl) {
         img.src = finalUrl;
-        img.style.display = "block";
-        placeholder.style.display = "none";
+        img.classList.remove("hidden");
+        placeholder.classList.add("hidden");
     } else {
-        img.style.display = "none";
-        placeholder.style.display = "flex";
+        img.src = "#";
+        img.classList.add("hidden");
+        placeholder.classList.remove("hidden");
     }
 });
 </script>

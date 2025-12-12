@@ -174,8 +174,7 @@ if ($hasImage) {
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Description</label>
-                    <textarea class="form-control" name="description" rows="3"><?= 
-                        htmlspecialchars($product['description']) ?></textarea>
+                    <textarea class="form-control" name="description" rows="3"><?= htmlspecialchars($product['description']) ?></textarea>
                 </div>
 
                 <div class="mb-3">
