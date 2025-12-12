@@ -21,7 +21,7 @@ body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: var(--light-bg);
+     background: transparent !important;
     color: var(--dark-text);
     line-height: 1.6;
 }
@@ -48,8 +48,9 @@ a:hover {
     padding: 20px;
     background: #fff;
     border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    box-shadow: none !important; /* cho sạch, không đổ bóng trắng */
 }
+
 
 /* === Navbar Styling === */
 .navbar {
@@ -93,7 +94,9 @@ a:hover {
 
 /* === New Hero Section Styles === */
 body.home-page {
-    background-color: #f5f7fb;
+    background: none !important;
+}
+
 }
 
 .hero-section {
@@ -352,3 +355,36 @@ body.home-page {
 }
 .table tbody tr:nth-child(even) { background-color: var(--light-bg); }
 .table .btn { width: auto; padding: 5px 10px; font-size: 0.9em; }
+
+/* === Background Video === */
+#bgVideo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important; 
+    z-index: -9999 !important;
+    pointer-events: none;
+    filter: brightness(0.55);
+}
+
+
+/* Remove default white background */
+body {
+    background: none !important;
+}
+.form-container {
+    position: relative;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.85); /* nền trắng nhẹ – nhìn rõ form */
+    padding: 30px;
+    border-radius: 10px;
+}
+.form-container {
+    position: relative;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border-radius: 10px;
+}

@@ -36,11 +36,14 @@ function displayProductGrid($products) {
         }
 
         $pid   = htmlspecialchars($p['id']);
+        $pname = htmlspecialchars($p['name']);
 
         // Only show 'Add to cart' button if user is NOT an admin
         if (empty($_SESSION['is_admin'])) {
             $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
+            $output .= '<input type="hidden" name="name" value="' . $pname . '">';
+            $output .= '<input type="hidden" name="price" value="' . $priceRaw . '">';
             $output .= '<input type="hidden" name="qty" value="1">';
             $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
             $output .= '</form>';

@@ -9,9 +9,16 @@ require_once __DIR__ . '/db.php';
     <title>MTP ND Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
+
 
 </head>
 <body>
+
+<!-- Background Video -->
+<video autoplay muted loop id="bgVideo">
+    <source src="<?= BASE_URL ?>/videos/noel.mp4" type="video/mp4">
+</video>
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0a437cff;">
   <div class="container-fluid">
