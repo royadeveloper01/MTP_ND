@@ -5,19 +5,19 @@ require_once __DIR__ . '/../db.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: list.php?error=Invalid request method.");
+    header('Location: ' . BASE_URL . '/products/list.php?error=Invalid request method.');
     exit;
 }
 
 // Validate CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    header("Location: list.php?error=Invalid CSRF token.");
+    header('Location: ' . BASE_URL . '/products/list.php?error=Invalid CSRF token.');
     exit;
 }
 
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if ($id <= 0) {
-    header("Location: list.php?error=Invalid product ID.");
+    header('Location: ' . BASE_URL . '/products/list.php?error=Invalid product ID.');
     exit;
 }
 
@@ -44,9 +44,9 @@ try {
         }
     }
 
-    header("Location: list.php?deleted=1");
+    header('Location: ' . BASE_URL . '/products/list.php?deleted=1');
     exit;
 } catch (Exception $e) {
-    header("Location: list.php?error=" . urlencode($e->getMessage()));
+    header('Location: ' . BASE_URL . '/products/list.php?error=' . urlencode($e->getMessage()));
     exit;
 }

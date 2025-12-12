@@ -1,91 +1,49 @@
 <?php
-require_once __DIR__ . '/db.php'; // Includes session_start()
+require_once __DIR__ . '/db.php';
 
 // Admins can't add to cart
 if (!empty($_SESSION['is_admin'])) {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
+<<<<<<< HEAD
+
+if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
+=======
+>>>>>>> 00620563f93c8868a6f9275f5bc47cde0a82ad74
 
 // RECEIVE PRODUCT DATA
-$product_id = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
-$qty = filter_input(INPUT_POST, 'qty', FILTER_VALIDATE_INT, ['options' => ['default' => 1, 'min_range' => 1]]);
+$id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;
+$size = isset($_POST['size']) ? trim($_POST['size']) : 'default'; // Use 'default' if no size
+$color = isset($_POST['color']) ? trim($_POST['color']) : 'default'; // Use 'default' if no color
+$qty = 1; // Always add one at a time from the product page
 
-if (!$product_id || !$qty) {
+if (!$id || (isset($_POST['size']) && $size === '') || (isset($_POST['color']) && $color === '')) {
+    // Fallback redirect if no product ID, or if a size/color was required but not provided.
+    // This prevents adding items with an empty selection.
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
-// Verify product exists in database before adding to cart
-try {
-    $verify_stmt = $conn->prepare("SELECT id, name, price FROM products WHERE id = ?");
-    $verify_stmt->bind_param('i', $product_id);
-    $verify_stmt->execute();
-    $product_result = $verify_stmt->get_result();
-    $product = $product_result->fetch_assoc();
-    $verify_stmt->close();
-
-    // If product doesn't exist, redirect back to index
-    if (!$product) {
-        header('Location: ' . BASE_URL . '/index.php');
-        exit;
-    }
-} catch (Exception $e) {
+// Verify product exists in database
+$stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+if ($stmt->get_result()->num_rows === 0) {
+    $stmt->close();
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
+$stmt->close();
 
-// --- LOGIC: DB for logged-in users, Session for guests ---
+// Create a unique key for the cart item based on product ID, size, and color
+$cart_key = $id . '-' . $size . '-' . $color;
 
-if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
-    // --- LOGGED-IN USER: Use database ---
-    $user_id = (int)$_SESSION['id'];
-
-    try {
-        // Use INSERT...ON DUPLICATE KEY UPDATE to add or update quantity
-        $sql = "INSERT INTO cart (user_id, product_id, quantity) 
-                VALUES (?, ?, ?) 
-                ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)";
-        
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
-        }
-        
-        $stmt->bind_param('iii', $user_id, $product_id, $qty);
-        
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-        
-        $stmt->close();
-
-    } catch (Exception $e) {
-        // Log error and redirect on failure
-        error_log("Cart DB Error: " . $e->getMessage());
-        header('Location: ' . BASE_URL . '/index.php?error=add_cart_failed');
-        exit;
-    }
-
+// ADD to session cart
+if (!isset($_SESSION['cart'][$cart_key])) {
+    $_SESSION['cart'][$cart_key] = ['product_id' => $id, 'size' => $size, 'color' => $color, 'qty' => $qty];
 } else {
-    // --- GUEST USER: Use session ---
-    // Use verified product data from database instead of form input
-    $name = $product['name'];
-    $price = (float)$product['price'];
-
-    if (!isset($_SESSION['cart'])) {
-        $_SESSION['cart'] = [];
-    }
-
-    if (!isset($_SESSION['cart'][$product_id])) {
-        $_SESSION['cart'][$product_id] = [
-            'name' => $name,
-            'price' => $price,
-            'qty' => $qty
-        ];
-    } else {
-        $_SESSION['cart'][$product_id]['qty'] += $qty;
-    }
+    $_SESSION['cart'][$cart_key]['qty'] += $qty;
 }
 
 // REDIRECT TO CART PAGE

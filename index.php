@@ -17,6 +17,8 @@ function displayProductGrid($products) {
         $priceDisplay = number_format($p['price'], 2);
         $priceRaw = isset($p['price']) ? floatval($p['price']) : 0;
 
+        $sizes = !empty($p['sizes']) ? explode(',', $p['sizes']) : [];
+        $colors = !empty($p['colors']) ? explode(',', $p['colors']) : [];
         $image = !empty($p['image']) ? htmlspecialchars($p['image']) : '';
         $desc  = !empty($p['description']) 
                     ? htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '')
@@ -37,12 +39,33 @@ function displayProductGrid($products) {
 
         $pid   = htmlspecialchars($p['id']);
 
-        // Only show 'Add to cart' button if user is NOT an admin
-        if (empty($_SESSION['is_admin'])) {
-            $output .= '<form method="post" action="add_to_cart.php" style="margin-top:10px;">';
+        // Only show 'Add to cart' button for non-admin users who are logged in
+        if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
+            $output .= '<form method="post" action="add_to_cart.php" class="mt-2">';
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
-            $output .= '<input type="hidden" name="qty" value="1">';
-            $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+            if (!empty($sizes) || !empty($colors)) {
+                $output .= '<div class="input-group input-group-sm">';
+                if (!empty($sizes)) {
+                    $output .= '<select name="size" class="form-select" required>';
+                    $output .= '<option value="">Size</option>';
+                    foreach ($sizes as $size) {
+                        $output .= '<option value="' . htmlspecialchars($size) . '">' . htmlspecialchars($size) . '</option>';
+                    }
+                    $output .= '</select>';
+                }
+                if (!empty($colors)) {
+                    $output .= '<select name="color" class="form-select" required>';
+                    $output .= '<option value="">Color</option>';
+                    foreach ($colors as $color) {
+                        $output .= '<option value="' . htmlspecialchars($color) . '">' . htmlspecialchars($color) . '</option>';
+                    }
+                    $output .= '</select>';
+                }
+                $output .= '<button type="submit" class="btn btn-primary">Add</button>';
+                $output .= '</div>';
+            } else {
+                $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+            }
             $output .= '</form>';
         }
 
@@ -74,7 +97,7 @@ try {
         'name'        => ['name', 'product_name', 'title'],
         'price'       => ['price', 'cost'],
         'image'       => ['image', 'img', 'image_url', 'photo'],
-        'description' => ['description', 'desc', 'details']
+        'description' => ['description', 'desc', 'details'],
     ];
 
     $selectFields = ['id'];
@@ -90,7 +113,18 @@ try {
 
     if (count($selectFields) > 1) {
 
-        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products";
+        // Use GROUP_CONCAT to fetch sizes and colors in a single query per category
+        $selectFields[] = "(SELECT GROUP_CONCAT(s.name) FROM product_sizes ps JOIN sizes s ON ps.size_id = s.id WHERE ps.product_id = p.id) AS sizes";
+        $selectFields[] = "(SELECT GROUP_CONCAT(c.name) FROM product_colors pc JOIN colors c ON pc.color_id = c.id WHERE pc.product_id = p.id) AS colors";
+
+        // Ensure 'p.id' is used to avoid ambiguity
+        $selectFields[0] = 'p.id';
+        foreach ($selectFields as $k => $v) {
+            if (strpos($v, ' AS ') !== false && strpos($v, 'p.') !== 0 && strpos($v, '(') !== 0) {
+                $selectFields[$k] = 'p.' . $v;
+            }
+        }
+        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products p";
 
         if ($category === 'all') {
             $pageTitle = 'All Products';
