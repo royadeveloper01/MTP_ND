@@ -6,8 +6,11 @@ if (!empty($_SESSION['is_admin'])) {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
+<<<<<<< HEAD
 
 if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
+=======
+>>>>>>> 00620563f93c8868a6f9275f5bc47cde0a82ad74
 
 // RECEIVE PRODUCT DATA
 $id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;

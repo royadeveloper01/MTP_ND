@@ -1,23 +1,20 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-// Redirect if not logged in or if user is an admin
-if (empty($_SESSION['loggedin'])) {
-    header("Location: auth/login.php");
-    exit;
-}
+// Admins should not see a cart page
 if (!empty($_SESSION['is_admin'])) {
-    header("Location: dashboard.php");
+    header('Location: ' . BASE_URL . '/dashboard.php');
     exit;
 }
 
+// Always initialize variables to avoid `undefined` errors.
 $cart_items = [];
-$total = 0;
-$error = '';
+$total      = 0;
+$error      = '';
 
 try {
     // --- Use Session Cart and Verify with DB ---
-    if (!empty($_SESSION['cart'])) {
+    if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
         $session_cart = $_SESSION['cart'];
         // Extract unique product IDs from the session cart using array_column
         $product_ids = array_unique(array_column($session_cart, 'product_id'));
@@ -58,19 +55,54 @@ try {
     $error = "Error loading cart details: " . $e->getMessage();
 }
 
+// Get the number of items to display in the badge, ensuring it's always safe. 
+$cartCount = is_array($cart_items) ? count($cart_items) : 0;
+
 include 'header.php';
 ?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cart</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{padding:20px;}
+    .btn{text-decoration:none;}
+  </style>
+</head>
+<body>
 
-<div class="container">
-    <h1>Your Cart</h1>
+<link rel="stylesheet" href="assets/css/cart.css">
+
+<div class="container cart-page">
+    <!-- Header -->
+    <div class="cart-header">
+        <div>
+            <h1>Your Cart</h1>
+            <div class="cart-subtitle">
+                Review and update the items before checkout.
+            </div>
+        </div>
+        <div>
+            <span class="cart-badge">
+                <?= $cartCount ?> item(s)
+            </span>
+        </div>
+    </div>
 
     <?php if ($error): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
     <?php if (empty($cart_items)): ?>
-        <p>Your cart is empty. <a href="index.php">Continue shopping</a></p>
-
+        <div class="empty-cart-card">
+            <h2>Your cart is empty</h2>
+            <p>Looks like you haven’t added anything to your cart yet.</p>
+            <a href="index.php" class="btn btn-primary">
+                Continue shopping
+            </a>
+        </div>
     <?php else: ?>
 
         <form method="post" action="update_cart.php"> <!-- This form correctly updates the session -->
@@ -113,7 +145,9 @@ include 'header.php';
                 <a class="btn btn-success" href="checkout.php">Proceed to Checkout</a>
             </div>
         </form>
+
     <?php endif; ?>
 </div>
 
-<?php include 'footer.php'; ?>
+</body>
+</html>
