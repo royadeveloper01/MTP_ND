@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/db.php'; // Includes session_start()
+require_once __DIR__ . '/db.php';
 
 // Admins should not see a cart page
 if (!empty($_SESSION['is_admin'])) {
@@ -16,36 +16,38 @@ try {
     // --- Use Session Cart and Verify with DB ---
     if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
         $session_cart = $_SESSION['cart'];
-        $product_ids  = array_keys($session_cart);
+        // Extract unique product IDs from the session cart using array_column
+        $product_ids = array_unique(array_column($session_cart, 'product_id'));
 
-        if (!empty($product_ids)) {
-            // Create placeholders for the IN clause
-            $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
-            $types        = str_repeat('i', count($product_ids));
+        // Create placeholders for the IN clause
+        $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
+        $types = str_repeat('i', count($product_ids));
 
-            $stmt = $conn->prepare("SELECT id, name, price FROM products WHERE id IN ($placeholders)");
-            $stmt->bind_param($types, ...$product_ids);
-            $stmt->execute();
-            $products_from_db = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
+        $stmt = $conn->prepare("SELECT id, name, price FROM products WHERE id IN ($placeholders)");
+        $stmt->bind_param($types, ...$product_ids);
+        $stmt->execute();
+        $products_from_db = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
 
-            // Create a map for easy lookup
-            $product_map = [];
-            foreach ($products_from_db as $p) {
-                $product_map[$p['id']] = $p;
-            }
+        // Create a map for easy lookup
+        $product_map = [];
+        foreach ($products_from_db as $p) {
+            $product_map[$p['id']] = $p;
+        }
 
-            // Build the final cart item list, ensuring products exist and using DB price
-            foreach ($session_cart as $product_id => $item) {
-                if (isset($product_map[$product_id])) {
-                    $product = $product_map[$product_id];
-                    $cart_items[] = [
-                        'id'       => $product_id,
-                        'name'     => $product['name'],
-                        'price'    => (float)$product['price'], // Authoritative price from DB
-                        'quantity' => (int)$item['qty']
-                    ];
-                }
+        // Build the final cart item list, ensuring products exist and using DB price
+        foreach ($session_cart as $cart_key => $item) {
+            $product_id = $item['product_id'];
+            if (isset($product_map[$product_id])) {
+                $product = $product_map[$product_id];
+                $cart_items[] = [
+                    'cart_key' => $cart_key,
+                    'name' => $product['name'],
+                    'price' => (float)$product['price'], // Authoritative price from DB
+                    'size' => $item['size'],
+                    'color' => $item['color'],
+                    'quantity' => (int)$item['qty']
+                ];
             }
         }
     }
@@ -103,86 +105,44 @@ include 'header.php';
         </div>
     <?php else: ?>
 
-        <form method="post" action="update_cart.php">
-            <div class="row g-3">
-                <!-- Left: items table -->
-                <div class="col-lg-8">
-                    <div class="card cart-card">
-                        <div class="card-header">
-                            <h2 class="h6 mb-3">Items in your cart</h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table cart-table align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Product</th>
-                                            <th scope="col">Price</th>
-                                            <th scope="col">Quantity</th>
-                                            <th scope="col">Subtotal</th>
-                                            <th scope="col" class="text-center">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($cart_items as $item): ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($item['name']) ?></td>
-                                                <td>$<?= number_format($item['price'], 2) ?></td>
-                                                <td style="max-width: 100px;">
-                                                    <input
-                                                        type="number"
-                                                        name="qty[<?= $item['id'] ?>]"
-                                                        value="<?= (int)$item['quantity'] ?>"
-                                                        min="1"
-                                                        class="form-control form-control-sm"
-                                                    >
-                                                </td>
-                                                <td>$<?= number_format($item['price'] * $item['quantity'], 2) ?></td>
-                                                <td class="text-center">
-                                                    <a
-                                                        href="remove_from_cart.php?id=<?= $item['id'] ?>"
-                                                        class="btn btn-outline-danger btn-sm"
-                                                    >
-                                                        Remove
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <form method="post" action="update_cart.php"> <!-- This form correctly updates the session -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th><th>Size</th><th>Color</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($cart_items as $item):
+                        $subtotal = $item['price'] * $item['quantity'];
+                        $total += $subtotal; // Calculate total based on verified prices
+                    ?>
+                    <tr>
+                        <td><?= htmlspecialchars($item['name']) ?></td>
+                        <td><?= $item['size'] !== 'default' ? htmlspecialchars($item['size']) : 'N/A' ?></td>
+                        <td><?= $item['color'] !== 'default' ? htmlspecialchars($item['color']) : 'N/A' ?></td>
+                        <td>$<?= number_format($item['price'], 2) ?></td>
+                        <td>
+                            <input type="number" name="qty[<?= $item['cart_key'] ?>]" value="<?= (int)$item['quantity'] ?>" min="1" class="form-control" style="width: 80px;">
+                        </td>
+                        <td>$<?= number_format($subtotal, 2) ?></td>
+                        <td>
+                            <a href="remove_from_cart.php?key=<?= $item['cart_key'] ?>" class="btn btn-danger btn-sm">Remove</a> <!-- This correctly removes from session -->
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                        <td colspan="2"><strong>$<?= number_format($total, 2) ?></strong></td>
+                    </tr>
+                </tfoot>
+            </table>
 
-                <!-- Right: summary -->
-                <div class="col-lg-4">
-                    <div class="card cart-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="cart-summary-title">Order Summary</div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="cart-total-label">Total</span>
-                                <span class="cart-total-value">
-                                    $<?= number_format($total, 2) ?>
-                                </span>
-                            </div>
-                            <hr>
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    Update Quantities
-                                </button>
-                                <a class="btn btn-success" href="checkout.php">
-                                    Proceed to Checkout
-                                </a>
-                                <a class="btn btn-link text-decoration-none" href="index.php">
-                                    ← Continue shopping
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="mt-3">
+                <button class="btn btn-primary" type="submit">Update Quantities</button>
+                <a class="btn btn-success" href="checkout.php">Proceed to Checkout</a>
             </div>
         </form>
 
