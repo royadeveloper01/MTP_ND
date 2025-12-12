@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+// Admins can't add to cart
+if (!empty($_SESSION['is_admin'])) {
+    header('Location: ' . BASE_URL . '/index.php');
+    exit;
+}
+
 if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
 
 // RECEIVE PRODUCT DATA
@@ -12,9 +18,21 @@ $qty = 1; // Always add one at a time from the product page
 if (!$id || (isset($_POST['size']) && $size === '') || (isset($_POST['color']) && $color === '')) {
     // Fallback redirect if no product ID, or if a size/color was required but not provided.
     // This prevents adding items with an empty selection.
-    header("Location: index.php");
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
+
+// Verify product exists in database
+$stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+if ($stmt->get_result()->num_rows === 0) {
+    $stmt->close();
+    header('Location: ' . BASE_URL . '/index.php');
+    exit;
+}
+$stmt->close();
+
 // Create a unique key for the cart item based on product ID, size, and color
 $cart_key = $id . '-' . $size . '-' . $color;
 
@@ -26,5 +44,5 @@ if (!isset($_SESSION['cart'][$cart_key])) {
 }
 
 // REDIRECT TO CART PAGE
-header("Location: cart.php");
+header('Location: ' . BASE_URL . '/cart.php');
 exit;
