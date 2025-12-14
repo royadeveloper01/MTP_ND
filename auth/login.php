@@ -107,9 +107,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                             foreach ($_SESSION['cart'] as $product_id => $item) {
                                 $pid = (int)$product_id;
-                                $qty = (int)$item['qty'];
-                                if ($pid > 0 && $qty > 0) {
-                                    $stmt->bind_param('iii', $user_id, $pid, $qty);
+                                $quantity = (int)$item['quantity'];
+                                if ($pid > 0 && $quantity > 0) {
+                                    $stmt->bind_param('iii', $user_id, $pid, $quantity);
                                     $stmt->execute();
                                 }
                             }

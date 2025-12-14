@@ -16,7 +16,7 @@ $stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
-    $cart[$row['product_id']] = ['qty' => $row['quantity']];
+    $cart[$row['product_id']] = ['quantity' => $row['quantity']];
 }
 $stmt->close();
 
@@ -54,7 +54,7 @@ try {
         foreach ($cart as $product_id => $item) {
             if (isset($product_map[$product_id])) {
                 $product = $product_map[$product_id];
-                $quantity = (int)$item['qty'];
+                $quantity = (int)$item['quantity'];
                 if ($quantity > 0) {
                     $final_items[] = [
                         'id' => $product_id,

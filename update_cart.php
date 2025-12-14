@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php'; // Includes session_start()
 
-if (isset($_POST['qty']) && is_array($_POST['qty'])) {
+if (isset($_POST['quantity']) && is_array($_POST['quantity'])) {
 
     if (!empty($_SESSION['loggedin'])) {
         // --- LOGGED-IN USER: Update database ---
@@ -12,15 +12,15 @@ if (isset($_POST['qty']) && is_array($_POST['qty'])) {
             $update_stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?");
             $delete_stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ?");
 
-            foreach ($_POST['qty'] as $product_id => $qty) {
+            foreach ($_POST['quantity'] as $product_id => $quantity) {
                 $product_id = (int)$product_id;
-                $qty = (int)$qty;
+                $quantity = (int)$quantity;
 
-                if ($qty <= 0) {
+                if ($quantity <= 0) {
                     $delete_stmt->bind_param('ii', $user_id, $product_id);
                     $delete_stmt->execute();
                 } else {
-                    $update_stmt->bind_param('iii', $qty, $user_id, $product_id);
+                    $update_stmt->bind_param('iii', $quantity, $user_id, $product_id);
                     $update_stmt->execute();
                 }
             }
@@ -35,12 +35,12 @@ if (isset($_POST['qty']) && is_array($_POST['qty'])) {
     } else {
         // --- GUEST USER: Update session ---
         $cart = $_SESSION['cart'] ?? [];
-        foreach ($_POST['qty'] as $id => $qty) {
+        foreach ($_POST['quantity'] as $id => $quantity) {
             if (isset($cart[$id])) {
-                if ((int)$qty <= 0) {
+                if ((int)$quantity <= 0) {
                     unset($_SESSION['cart'][$id]);
                 } else {
-                    $_SESSION['cart'][$id]['qty'] = (int)$qty;
+                    $_SESSION['cart'][$id]['quantity'] = (int)$quantity;
                 }
             }
         }

@@ -24,6 +24,7 @@ $products = $conn->query("SELECT * FROM products ORDER BY id DESC")->fetch_all(M
 <head>
     <title>Product List</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 <div class="container" style="margin:50px auto;">

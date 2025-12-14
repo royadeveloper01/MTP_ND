@@ -44,7 +44,7 @@ function displayProductGrid($products) {
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
             $output .= '<input type="hidden" name="name" value="' . $pname . '">';
             $output .= '<input type="hidden" name="price" value="' . $priceRaw . '">';
-            $output .= '<input type="hidden" name="qty" value="1">';
+            $output .= '<input type="hidden" name="quantity" value="1">';
             $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
             $output .= '</form>';
         }
@@ -139,7 +139,7 @@ try {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Welcome to MTP Store</title>
+    <title>Welcome to MTP Store. </title>
     <link rel="stylesheet" href="style.css">
 
     <style>
@@ -151,7 +151,7 @@ try {
             position: relative;
             overflow: hidden;
             padding: 3rem 1rem 2rem 1rem;
-            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            background: linear-gradient(135deg, #0f1f3d, #1b2a4e);
             color: #fff;
             margin-bottom: 1.5rem;
         }
@@ -217,7 +217,7 @@ try {
             flex: 0 1 260px;
             min-width: 230px;
             max-width: 320px;
-            height: 180px;
+            height: 360px;
             border-radius: 1.5rem;
             background: rgba(255, 255, 255, 0.12);
             box-shadow: 0 14px 40px rgba(15, 23, 42, 0.25);
@@ -306,7 +306,7 @@ try {
         .product-card img {
             border-radius: 0.8rem;
             width: 100%;
-            height: 180px;
+            height: 360px;
             object-fit: cover;
             margin-bottom: 0.6rem;
         }
@@ -346,6 +346,7 @@ try {
 <body class="home-page">
 
 <!-- HERO -->
+<div class="hero-wrapper">
 <div class="hero-section">
     <div class="hero-inner">
         <div class="hero-text">
@@ -366,6 +367,7 @@ try {
             </span>
         </div>
     </div>
+</div>
 </div>
 
 <div class="products-wrapper">

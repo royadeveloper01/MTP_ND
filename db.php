@@ -40,12 +40,12 @@ if (session_status() === PHP_SESSION_NONE) {
     // NEW: force cookie path to BASE_URL
     session_set_cookie_params([
         'lifetime' => 0,
-        'path'     => rtrim(BASE_URL, '/') . '/', // ensure trailing slash
-        'domain'   => $cookieParams['domain'] ?? '',
-        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
+    'path'     => '/', // ✅ CHUẨN – cho phép session dùng toàn site
+    'domain'   => $cookieParams['domain'] ?? '',
+    'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 
     session_start();
 }
