@@ -17,6 +17,8 @@ function displayProductGrid($products) {
         $priceDisplay = number_format($p['price'], 2);
         $priceRaw = isset($p['price']) ? floatval($p['price']) : 0;
 
+        $sizes = !empty($p['sizes']) ? explode(',', $p['sizes']) : [];
+        $colors = !empty($p['colors']) ? explode(',', $p['colors']) : [];
         $image = !empty($p['image']) ? htmlspecialchars($p['image']) : '';
         $desc  = !empty($p['description']) 
                     ? htmlspecialchars(substr($p['description'], 0, 100)) . (strlen($p['description']) > 100 ? '...' : '')
@@ -74,7 +76,7 @@ try {
         'name'        => ['name', 'product_name', 'title'],
         'price'       => ['price', 'cost'],
         'image'       => ['image', 'img', 'image_url', 'photo'],
-        'description' => ['description', 'desc', 'details']
+        'description' => ['description', 'desc', 'details'],
     ];
 
     $selectFields = ['id'];
@@ -90,7 +92,18 @@ try {
 
     if (count($selectFields) > 1) {
 
-        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products";
+        // Use GROUP_CONCAT to fetch sizes and colors in a single query per category
+        $selectFields[] = "(SELECT GROUP_CONCAT(s.name) FROM product_sizes ps JOIN sizes s ON ps.size_id = s.id WHERE ps.product_id = p.id) AS sizes";
+        $selectFields[] = "(SELECT GROUP_CONCAT(c.name) FROM product_colors pc JOIN colors c ON pc.color_id = c.id WHERE pc.product_id = p.id) AS colors";
+
+        // Ensure 'p.id' is used to avoid ambiguity
+        $selectFields[0] = 'p.id';
+        foreach ($selectFields as $k => $v) {
+            if (strpos($v, ' AS ') !== false && strpos($v, 'p.') !== 0 && strpos($v, '(') !== 0) {
+                $selectFields[$k] = 'p.' . $v;
+            }
+        }
+        $baseSql = "SELECT " . implode(', ', $selectFields) . " FROM products p";
 
         if ($category === 'all') {
             $pageTitle = 'All Products';

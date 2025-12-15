@@ -5,19 +5,19 @@ require_once __DIR__ . '/../db.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . BASE_URL . '/products/list.php?error=Invalid request method.');
+    header("Location: list.php?error=Invalid request method.");
     exit;
 }
 
 // Validate CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    header('Location: ' . BASE_URL . '/products/list.php?error=Invalid CSRF token.');
+    header("Location: list.php?error=Invalid CSRF token.");
     exit;
 }
 
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if ($id <= 0) {
-    header('Location: ' . BASE_URL . '/products/list.php?error=Invalid product ID.');
+    header("Location: list.php?error=Invalid product ID.");
     exit;
 }
 
@@ -37,16 +37,21 @@ try {
     $stmt->close();
 
     // optionally delete image file (uncomment if you want)
-    if (!empty($row['image'])) {
-        $path = __DIR__ . '/' . $row['image'];
+    // FIX: Correctly check for local file and delete it.
+    if (!empty($row['image']) && !preg_match('/^https?:\/\//i', $row['image'])) {
+        // CRITICAL SECURITY FIX: Use basename() to prevent path traversal
+        $path = __DIR__ . '/../uploads/' . basename($row['image']);
         if (file_exists($path)) {
-            // unlink($path); // uncomment to actually delete files
+            unlink($path);
         }
     }
 
-    header('Location: ' . BASE_URL . '/products/list.php?deleted=1');
+    header("Location: list.php?deleted=1");
     exit;
+
 } catch (Exception $e) {
-    header('Location: ' . BASE_URL . '/products/list.php?error=' . urlencode($e->getMessage()));
+    // SECURITY FIX: Log detailed error and redirect with generic message
+    error_log("Product Deletion Database Error: " . $e->getMessage());
+    header("Location: list.php?error=An error occurred during deletion.");
     exit;
 }

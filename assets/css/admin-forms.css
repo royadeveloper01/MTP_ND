@@ -1,0 +1,35 @@
+.main-content {
+    margin: 50px auto;
+}
+
+.product-list-table {
+    margin-top: 20px;
+}
+
+.inline-form {
+    display: inline-block;
+}
+
+.form-max-width {
+    max-width: 600px;
+}
+
+.preview-placeholder,
+.preview-img {
+    width: 300px;
+    height: 300px;
+    object-fit: contain;
+}
+
+.preview-placeholder {
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #999;
+}
+
+.hidden {
+    display: none !important;
+}

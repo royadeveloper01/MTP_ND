@@ -1,23 +1,10 @@
 <?php
-require_once __DIR__ . '/db.php'; // Includes session_start() and DB connection
+require_once __DIR__ . '/db.php';
 
-$product_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$key = $_GET['key'] ?? null;
 
-if ($product_id) {
-    // 1. Always remove from session (Handles Guests + ensures UI updates immediately)
-    if (isset($_SESSION['cart'][$product_id])) {
-        unset($_SESSION['cart'][$product_id]);
-    }
-
-    // 2. If logged in, also remove from Database
-    if (!empty($_SESSION['loggedin'])) {
-        $user_id = $_SESSION['id'];
-        // Use prepared statement for security
-        $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ?");
-        $stmt->bind_param('ii', $user_id, $product_id);
-        $stmt->execute();
-        $stmt->close();
-    }
+if ($key && isset($_SESSION['cart'][$key])) {
+    unset($_SESSION['cart'][$key]);
 }
 
 header("Location: cart.php");

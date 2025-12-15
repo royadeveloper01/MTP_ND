@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/db.php'; // Includes session_start()
+require_once __DIR__ . '/db.php';
 
 // Admins should not see a cart page
 if (!empty($_SESSION['is_admin'])) {
