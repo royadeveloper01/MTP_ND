@@ -64,7 +64,7 @@ try {
             $cleanFilename = basename($imagePath);
 
             // Construct the absolute path to the 'uploads' directory
-            $path = __DIR__ . '/../uploads/' . $cleanFilename; 
+            $path = __DIR__ . '/../uploads/' . $cleanFilename;
 
             if (file_exists($path)) {
                 // Perform the actual file deletion
@@ -80,6 +80,6 @@ try {
     
     // SECURITY FIX: Log detailed error and redirect with generic message
     error_log("Product Deletion Database Error (ID: {$id}): " . $e->getMessage());
-    header("Location: list.php?error=An error occurred during deletion.");
+    header('Location: ' . BASE_URL . '/products/list.php?error=An error occurred during deletion.');
     exit;
 }

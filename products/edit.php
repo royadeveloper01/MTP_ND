@@ -182,28 +182,7 @@ if (isset($_POST) && $message) {
 include __DIR__ . '/../header.php';
 ?>
 
-<style>
-.form-max-width {
-    max-width: 600px;
-}
-.preview-placeholder,
-.preview-img {
-    width: 300px;
-    height: 300px;
-    object-fit: contain;
-}
-.preview-placeholder {
-    border: 1px solid #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #999;
-}
-.hidden {
-    display: none !important;
-}
-</style>
+<link rel="stylesheet" href="../assets/css/admin-forms.css">
 
 <?php
 // Build safe preview URL for initial load
