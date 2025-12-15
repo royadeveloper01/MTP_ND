@@ -253,7 +253,7 @@ try {
                         <p class="stat-number"><?php echo $stats['customers']; ?></p>
                     </div>
                     <div>
-                        <a href="<?php echo BASE_URL; ?>/customers.php">Manage Customers →</a>
+                        <a href="<?php echo BASE_URL; ?>/customers/customers.php">Manage Customers →</a>
                     </div>
                 </div>
                 <div class="stat-card">

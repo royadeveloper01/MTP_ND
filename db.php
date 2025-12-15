@@ -27,9 +27,10 @@ if (isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], $local_hosts
     $pass = '';
     $db   = 'mtp_db';
 } else {
+    // WARNING: Do not commit actual credentials to version control. Use environment variables.
     $host = 'sql204.infinityfree.com';
-    $user = 'if0_40503929';
-    $pass = 'thisiswebdesign';
+    $user = 'if0_40503929'; // Consider using getenv('DB_USER')
+    $pass = 'thisiswebdesign'; // Consider using getenv('DB_PASS')
     $db   = 'if0_40503929_mtpnd_database';
 }
 

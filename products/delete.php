@@ -21,8 +21,10 @@ if ($id <= 0) {
     exit;
 }
 
+// Use a transaction for deletion (good practice, though not strictly required for one row)
+$conn->begin_transaction();
 try {
-    // optionally fetch image path to unlink
+    // 1. Fetch image path (if exists) before deleting the main row
     $stmt = $conn->prepare("SELECT image FROM products WHERE id = ? LIMIT 1");
     $stmt->bind_param("i", $id);
     $stmt->execute();
@@ -30,23 +32,54 @@ try {
     $row = $res->fetch_assoc();
     $stmt->close();
 
-    // remove DB row
+    // 2. Remove associated records (sizes and colors) - crucial for cleanup
+    // FIX: Use prepared statements for consistency and security
+    $stmt_del = $conn->prepare("DELETE FROM product_sizes WHERE product_id = ?");
+    $stmt_del->bind_param("i", $id);
+    $stmt_del->execute();
+    $stmt_del->close();
+
+    $stmt_del = $conn->prepare("DELETE FROM product_colors WHERE product_id = ?");
+    $stmt_del->bind_param("i", $id);
+    $stmt_del->execute();
+    $stmt_del->close();
+    
+    // 3. Delete the main product row
     $stmt = $conn->prepare("DELETE FROM products WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $stmt->close();
+    
+    $conn->commit();
 
-    // optionally delete image file (uncomment if you want)
+    // 4. Optionally delete image file (Crucial Security Fix applied here)
     if (!empty($row['image'])) {
-        $path = __DIR__ . '/' . $row['image'];
-        if (file_exists($path)) {
-            // unlink($path); // uncomment to actually delete files
+        $imagePath = $row['image'];
+
+        // Check if the image path is NOT a full URL (i.e., it's a local filename)
+        if (!preg_match('/^https?:\/\//i', $imagePath)) {
+            
+            // CRITICAL SECURITY FIX: Use basename() to strip any directory components
+            // e.g., 'uploads/../../etc/passwd' becomes just 'passwd'
+            $cleanFilename = basename($imagePath);
+
+            // Construct the absolute path to the 'uploads' directory
+            $path = __DIR__ . '/../uploads/' . $cleanFilename; 
+
+            if (file_exists($path)) {
+                // Perform the actual file deletion
+                unlink($path); 
+            }
         }
     }
 
     header('Location: ' . BASE_URL . '/products/list.php?deleted=1');
     exit;
 } catch (Exception $e) {
-    header('Location: ' . BASE_URL . '/products/list.php?error=' . urlencode($e->getMessage()));
+    $conn->rollback();
+    
+    // SECURITY FIX: Log detailed error and redirect with generic message
+    error_log("Product Deletion Database Error (ID: {$id}): " . $e->getMessage());
+    header("Location: list.php?error=An error occurred during deletion.");
     exit;
 }
