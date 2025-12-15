@@ -4,6 +4,25 @@
 
 $local_hosts = ['localhost', '127.0.0.1', 'localhost:88', 'mtp_nd.test'];
 
+// Load .env file if it exists (Simple parser)
+if (file_exists(__DIR__ . '/.env')) {
+    $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+            
+            if (!getenv($name)) {
+                putenv("{$name}={$value}");
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+    }
+}
+
 // AUTH secret for remember-me HMAC
 if (!defined('AUTH_SECRET')) {
     define('AUTH_SECRET', 'change_this_to_a_random_32+_char_secret_please!');
@@ -20,19 +39,22 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', $base);
 }
 
-// Choose DB config based on host
-if (isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], $local_hosts)) {
-    $host = '127.0.0.1';
-    $user = 'root';
-    $pass = '';
-    $db   = 'mtp_db';
-} else {
-    // WARNING: Do not commit actual credentials to version control. Use environment variables.
-    $host = 'sql204.infinityfree.com';
-    $user = 'if0_40503929'; // Consider using getenv('DB_USER')
-    $pass = 'thisiswebdesign'; // Consider using getenv('DB_PASS')
-    $db   = 'if0_40503929_mtpnd_database';
-}
+// Database Connection Variables
+// Detect environment prefix based on HTTP_HOST
+$env_prefix = (isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], $local_hosts)) ? 'LOCAL_' : 'LIVE_';
+
+// Fetch variables with prefix, fallback to standard names if prefixed ones are missing
+$host = getenv($env_prefix . 'DB_HOST');
+if ($host === false) $host = getenv('DB_HOST');
+
+$user = getenv($env_prefix . 'DB_USER');
+if ($user === false) $user = getenv('DB_USER');
+
+$pass = getenv($env_prefix . 'DB_PASS');
+if ($pass === false) $pass = getenv('DB_PASS');
+
+$db = getenv($env_prefix . 'DB_NAME');
+if ($db === false) $db = getenv('DB_NAME');
 
 // --- Start session safely and force session-only cookie ---
 if (session_status() === PHP_SESSION_NONE) {
