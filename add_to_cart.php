@@ -1,27 +1,48 @@
 <?php
-// add_to_cart.php
-if (session_status() === PHP_SESSION_NONE) session_start();
-header('Content-Type: application/json');
+require_once __DIR__ . '/db.php';
 
-if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
-
-$id = isset($_POST['id']) ? trim($_POST['id']) : null;
-$name = isset($_POST['name']) ? trim($_POST['name']) : '';
-$price = isset($_POST['price']) ? floatval($_POST['price']) : 0;
-$qty = isset($_POST['qty']) ? intval($_POST['qty']) : 1;
-
-if (!$id) {
-    echo json_encode(['success' => false, 'message' => 'Invalid product id']);
+// Admins can't add to cart
+if (!empty($_SESSION['is_admin'])) {
+    header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
 
-if (!isset($_SESSION['cart'][$id])) {
-    $_SESSION['cart'][$id] = ['name' => $name, 'price' => $price, 'qty' => $qty];
-} else {
-    $_SESSION['cart'][$id]['qty'] += $qty;
+if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
+
+// RECEIVE PRODUCT DATA
+$id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;
+$size = isset($_POST['size']) ? trim($_POST['size']) : 'default'; // Use 'default' if no size
+$color = isset($_POST['color']) ? trim($_POST['color']) : 'default'; // Use 'default' if no color
+$qty = 1; // Always add one at a time from the product page
+
+if (!$id || (isset($_POST['size']) && $size === '') || (isset($_POST['color']) && $color === '')) {
+    // Fallback redirect if no product ID, or if a size/color was required but not provided.
+    // This prevents adding items with an empty selection.
+    header('Location: ' . BASE_URL . '/index.php');
+    exit;
 }
 
-$totalQty = array_sum(array_column($_SESSION['cart'], 'qty'));
+// Verify product exists in database
+$stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
+$stmt->bind_param('i', $id);
+$stmt->execute();
+if ($stmt->get_result()->num_rows === 0) {
+    $stmt->close();
+    header('Location: ' . BASE_URL . '/index.php');
+    exit;
+}
+$stmt->close();
 
-echo json_encode(['success' => true, 'cart_count' => $totalQty]);
+// Create a unique key for the cart item based on product ID, size, and color
+$cart_key = $id . '-' . $size . '-' . $color;
+
+// ADD to session cart
+if (!isset($_SESSION['cart'][$cart_key])) {
+    $_SESSION['cart'][$cart_key] = ['product_id' => $id, 'size' => $size, 'color' => $color, 'qty' => $qty];
+} else {
+    $_SESSION['cart'][$cart_key]['qty'] += $qty;
+}
+
+// REDIRECT TO CART PAGE
+header('Location: ' . BASE_URL . '/cart.php');
 exit;

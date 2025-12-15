@@ -1,36 +1,151 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/auth/auth.php'; // Includes session, db, etc.
 
-if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-    header("Location: cart.php");
+// User must be logged in and not an admin
+if (empty($_SESSION['loggedin']) || !empty($_SESSION['is_admin'])) {
+    header('Location: ' . BASE_URL . '/auth/login.php');
     exit;
 }
 
-$cart = $_SESSION['cart'];
-$total = 0;
+$user_id = $_SESSION['id'];
+$cart = [];
 
-foreach ($cart as $it) {
-    $total += $it['price'] * $it['qty'];
+// Fetch cart from DB since user is logged in
+$stmt = $conn->prepare("SELECT product_id, quantity FROM cart WHERE user_id = ?");
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $cart[$row['product_id']] = ['qty' => $row['quantity']];
+}
+$stmt->close();
+
+if (empty($cart)) {
+    header('Location: ' . BASE_URL . '/cart.php');
+    exit;
 }
 
-// Clear cart after checkout (demo)
-unset($_SESSION['cart']);
+$final_items = [];
+$final_total = 0;
+$error = '';
+$is_in_transaction = false;
+
+try {
+    // --- Verify products and calculate final total from DB prices ---
+    if (!empty($cart)) {
+        $product_ids = array_unique(array_column($cart, 'product_id')); // More concise
+        // Create placeholders for the IN clause
+        $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
+        $types = str_repeat('i', count($product_ids));
+
+        $stmt = $conn->prepare("SELECT id, name, price FROM products WHERE id IN ($placeholders)");
+        $stmt->bind_param($types, ...$product_ids);
+        $stmt->execute();
+        $products_from_db = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        // Create a map of product_id => product_data for easy lookup
+        $product_map = [];
+        foreach ($products_from_db as $p) {
+            $product_map[$p['id']] = $p;
+        }
+
+        // Build the final item list using DB prices and session quantities
+        foreach ($cart as $cart_key => $item) {
+            $product_id = $item['product_id'];
+            if (isset($product_map[$product_id])) {
+                $product = $product_map[$product_id];
+                $quantity = (int)$item['qty'];
+                if ($quantity > 0) {
+                    $final_items[] = [
+                        'id' => $product_id,
+                        'name' => $product['name'],
+                        'size' => $item['size'],
+                        'color' => $item['color'],
+                        'price' => (float)$product['price'], // Use price from DB
+                        'quantity' => $quantity
+                    ];
+                    $final_total += $product['price'] * $quantity;
+                }
+            }
+        }
+    }
+
+    if (empty($final_items)) {
+        throw new Exception("Your cart contains invalid items.");
+    }
+
+    // --- Create Order in a Transaction ---
+    $conn->begin_transaction();
+    $is_in_transaction = true;
+
+    // Placeholder for shipping info until a form is created
+    $shipping_address = '123 Main St, Anytown, USA';
+
+    // 1. Insert into `orders` table
+    $stmt = $conn->prepare("INSERT INTO orders (user_id, total_amount, shipping_address) VALUES (?, ?, ?)");
+    $stmt->bind_param('ids', $user_id, $final_total, $shipping_address);
+    $stmt->execute();
+    $order_id = $stmt->insert_id;
+    $stmt->close();
+
+    // 2. Insert into `order_items` table
+    $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, size, color, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
+    foreach ($final_items as $item) {
+        $stmt->bind_param('iissid', $order_id, $item['id'], $item['size'], $item['color'], $item['quantity'], $item['price']);
+        $stmt->execute();
+    }
+    $stmt->close();
+
+    // 3. Clear the cart
+    $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $stmt->close();
+
+    // 4. Commit transaction
+    $conn->commit();
+    $is_in_transaction = false;
+
+} catch (Exception $e) {
+    if ($is_in_transaction) {
+        $conn->rollback();
+    }
+    $error = "Could not process your order. Please try again. Error: " . $e->getMessage();
+}
+
+include __DIR__ . '/header.php';
 ?>
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Checkout</title></head>
-<body>
-<h1>Checkout Complete</h1>
 
-<p><strong>Total paid:</strong> $<?= number_format($total,2) ?></p>
+<div class="container">
+    <?php if ($error): ?>
+        <div class="alert alert-danger">
+            <h1>Order Failed</h1>
+            <p><?= htmlspecialchars($error) ?></p>
+            <a href="cart.php" class="btn btn-secondary">Back to Cart</a>
+        </div>
+    <?php else: ?>
+        <h1>Checkout Complete!</h1>
+        <p>Your order #<?= (int)$order_id ?> has been placed successfully.</p>
 
-<h3>Items:</h3>
-<ul>
-<?php foreach ($cart as $it): ?>
-    <li><?= htmlspecialchars($it['name']) ?> × <?= intval($it['qty']) ?> — $<?= number_format($it['price'],2) ?></li>
-<?php endforeach; ?>
-</ul>
+        <div class="card">
+            <div class="card-header">Order Summary</div>
+            <div class="card-body">
+                <p><strong>Total Paid:</strong> $<?= number_format($final_total, 2) ?></p>
+                <h5>Items Ordered:</h5>
+                <ul class="list-group list-group-flush">
+                    <?php foreach ($final_items as $item): ?>
+                        <li class="list-group-item">
+                            <?= htmlspecialchars($item['name']) ?> (<?= htmlspecialchars($item['size']) ?>, <?= htmlspecialchars($item['color']) ?>) &times; <?= (int)$item['quantity'] ?>
+                            (Subtotal: $<?= number_format($item['price'] * $item['quantity'], 2) ?>)
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
 
-<p><a href="index.php">Back to shop</a></p>
-</body>
-</html>
+        <p class="mt-4"><a href="index.php" class="btn btn-primary">Continue Shopping</a></p>
+    <?php endif; ?>
+</div>
+
+<?php include __DIR__ . '/footer.php'; ?>
