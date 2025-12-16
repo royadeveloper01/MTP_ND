@@ -1,13 +1,16 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-// Calculate cart item count for badge (only if session cart exists)
+// Calculate cart item count for badge
 $cart_count = 0;
 if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     foreach ($_SESSION['cart'] as $item) {
-        $cart_count += $item['qty'] ?? 1;  // Add quantity (default 1 if missing)
+        $cart_count += $item['qty'] ?? 1;
     }
 }
+
+// Determine current page for page-specific CSS
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!doctype html>
 <html lang="en">
@@ -20,13 +23,19 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
 
-    <style>
-/* Cart badge styling – moved from header.php */
-.cart-badge {
-    font-size: 0.7rem;
-    vertical-align: top;
-}
-    </style>
+    <!-- Page-specific CSS (fixed as requested) -->
+    <?php if ($current_page === 'dashboard.php'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/dashboard.css">
+    <?php endif; ?>
+    <?php if ($current_page === 'index.php'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/shop.css">
+    <?php endif; ?>
+    <?php if ($current_page === 'cart.php'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/cart.css">
+    <?php endif; ?>
+    <?php if (strpos($current_page, 'list.php') !== false || strpos($current_page, 'add.php') !== false || strpos($current_page, 'edit.php') !== false): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
+    <?php endif; ?>
 </head>
 <body>
 
@@ -37,18 +46,12 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0a437cff;">
   <div class="container-fluid">
-
     <a class="navbar-brand" href="<?= BASE_URL ?>/index.php">MTP Store</a>
-
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarNav">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-
       <ul class="navbar-nav">
-
         <li class="nav-item">
           <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
         </li>
@@ -75,11 +78,8 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
               <a class="nav-link" href="<?= BASE_URL ?>/auth/login.php">Login</a>
             </li>
         <?php endif; ?>
-
       </ul>
-
     </div>
-
   </div>
 </nav>
 

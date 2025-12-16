@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/header.php';  // Assuming you include header here
+require_once __DIR__ . '/header.php';
 
 // Admins should not see cart
 if (!empty($_SESSION['is_admin'])) {
@@ -8,9 +8,9 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-// Get success message from add_to_cart.php
+// Get success message
 $cart_success_message = $_SESSION['cart_success'] ?? '';
-unset($_SESSION['cart_success']); // Clear after use
+unset($_SESSION['cart_success']);
 
 $cart_items = [];
 $total = 0;
@@ -30,13 +30,11 @@ try {
             $products_from_db = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
 
-            // Map products by ID for easy lookup
             $products_map = [];
             foreach ($products_from_db as $p) {
                 $products_map[$p['id']] = $p;
             }
 
-            // Build cart items with DB data
             foreach ($session_cart as $key => $item) {
                 $prod_id = $item['product_id'];
                 if (isset($products_map[$prod_id])) {
@@ -54,7 +52,6 @@ try {
                         'quantity'  => $quantity,
                         'subtotal'  => $subtotal
                     ];
-
                     $total += $subtotal;
                 }
             }
@@ -68,7 +65,6 @@ try {
 <div class="container my-5">
     <h1 class="mb-4"><i class="bi bi-cart4"></i> Your Shopping Cart</h1>
 
-    <!-- Success Message -->
     <?php if (!empty($cart_success_message)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($cart_success_message) ?>
@@ -98,9 +94,9 @@ try {
                                 <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
                                 <td>
                                     <?php if (!empty($item['image'])): ?>
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail" style="width:80px;">
+                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image">
                                     <?php else: ?>
-                                        <div class="bg-light border" style="width:80px;height:80px;"></div>
+                                        <div class="cart-item-placeholder">No Image</div>
                                     <?php endif; ?>
                                 </td>
                                 <td>$<?= number_format($item['price'], 2) ?></td>
@@ -127,14 +123,10 @@ try {
                 </table>
             </div>
 
-            <!-- Action Buttons -->
             <div class="mt-4 d-flex flex-wrap gap-3 justify-content-between align-items-center">
-                <!-- Left: Continue Shopping -->
                 <a href="<?= BASE_URL ?>/index.php" class="btn btn-outline-primary btn-lg">
                     <i class="bi bi-arrow-left-circle"></i> Continue Shopping
                 </a>
-
-                <!-- Right: Update + Checkout -->
                 <div class="d-flex gap-3">
                     <button type="submit" class="btn btn-secondary btn-lg">Update Quantities</button>
                     <a href="<?= BASE_URL ?>/checkout.php" class="btn btn-success btn-lg">Proceed to Checkout</a>
@@ -142,9 +134,8 @@ try {
             </div>
         </form>
     <?php else: ?>
-        <!-- Empty Cart -->
         <div class="text-center py-5">
-            <i class="bi bi-cart-x" style="font-size: 5rem; color: #ccc;"></i>
+            <i class="bi bi-cart-x empty-cart-icon"></i>
             <h3 class="mt-3 text-muted">Your cart is empty</h3>
             <p class="text-muted">Looks like you haven't added anything yet.</p>
             <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">
