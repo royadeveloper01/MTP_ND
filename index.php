@@ -39,33 +39,12 @@ function displayProductGrid($products) {
 
         $pid   = htmlspecialchars($p['id']);
 
-        // Only show 'Add to cart' button for non-admin users who are logged in
-        if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
-            $output .= '<form method="post" action="add_to_cart.php" class="mt-2">';
+        // Only show 'Add to cart' button if user is NOT an admin
+        if (empty($_SESSION['is_admin'])) {
+            $output .= '<form method="post" action="' . BASE_URL . '/add_to_cart.php" style="margin-top:10px;">';
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
-            if (!empty($sizes) || !empty($colors)) {
-                $output .= '<div class="input-group input-group-sm">';
-                if (!empty($sizes)) {
-                    $output .= '<select name="size" class="form-select" required>';
-                    $output .= '<option value="">Size</option>';
-                    foreach ($sizes as $size) {
-                        $output .= '<option value="' . htmlspecialchars($size) . '">' . htmlspecialchars($size) . '</option>';
-                    }
-                    $output .= '</select>';
-                }
-                if (!empty($colors)) {
-                    $output .= '<select name="color" class="form-select" required>';
-                    $output .= '<option value="">Color</option>';
-                    foreach ($colors as $color) {
-                        $output .= '<option value="' . htmlspecialchars($color) . '">' . htmlspecialchars($color) . '</option>';
-                    }
-                    $output .= '</select>';
-                }
-                $output .= '<button type="submit" class="btn btn-primary">Add</button>';
-                $output .= '</div>';
-            } else {
-                $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
-            }
+            $output .= '<input type="hidden" name="qty" value="1">';
+            $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
             $output .= '</form>';
         }
 
@@ -375,6 +354,19 @@ try {
     </style>
 </head>
 <body class="home-page">
+    <?php if (!empty($_SESSION['cart_success'])): ?>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+  <div class="toast align-items-center text-bg-success border-0 show">
+    <div class="d-flex">
+      <div class="toast-body">
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto"
+              onclick="this.closest('.toast').remove()"></button>
+    </div>
+  </div>
+</div>
+<?php unset($_SESSION['cart_success']); endif; ?>
+
 
 <!-- HERO -->
 <div class="hero-section">
