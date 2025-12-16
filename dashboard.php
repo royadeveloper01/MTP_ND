@@ -52,9 +52,10 @@ try {
         }
     } else {
         // Regular user stats
-        $result = $conn->query("SELECT COUNT(*) as count FROM products");
+        $result = $conn->query("SELECT COUNT(*) AS total_sizes, (SELECT COUNT(*) FROM colors) AS total_colors FROM sizes");
         if ($result) {
-            $stats['products'] = (int)$result->fetch_assoc()['count'];
+            $row = $result->fetch_assoc();
+            $stats['attributes'] = (int)$row['total_sizes'] + (int)$row['total_colors'];
         }
 
         // Get cart item count from session
