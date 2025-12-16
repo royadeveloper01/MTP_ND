@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/auth/auth.php';
+require_once __DIR__ . '/../auth/auth.php';
 
 // Admins only
 if (empty($_SESSION['is_admin'])) {
@@ -54,7 +54,7 @@ try {
     $error = "Database error: " . $e->getMessage();
 }
 
-include __DIR__ . '/header.php';
+include __DIR__ . '/../header.php';
 ?>
 
 <div class="container">
@@ -137,4 +137,4 @@ include __DIR__ . '/header.php';
     <?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/footer.php'; ?>
+<?php include __DIR__ . '/../footer.php'; ?>
