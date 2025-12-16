@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-// Calculate cart item count for badge
+// Calculate cart item count for badge (works for guests too!)
 $cart_count = 0;
 if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     foreach ($_SESSION['cart'] as $item) {
@@ -12,7 +12,7 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 // Determine current page
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Page-specific CSS mapping (clean & scalable)
+// Page-specific CSS mapping (scalable & maintainable)
 $page_css_map = [
     'dashboard.php' => 'dashboard.css',
     'index.php'     => 'shop.css',
@@ -61,15 +61,15 @@ $admin_pages = ['list.php', 'add.php', 'edit.php'];
           <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
         </li>
 
-        <!-- Manage Products for Admins -->
+        <!-- Manage Products — Only for Admins -->
         <?php if (!empty($_SESSION['is_admin'])): ?>
             <li class="nav-item">
               <a class="nav-link" href="<?= BASE_URL ?>/products/list.php">Manage Products</a>
             </li>
         <?php endif; ?>
 
-        <!-- Cart with Badge for Customers -->
-        <?php if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])): ?>
+        <!-- Cart with Badge — For Everyone EXCEPT Admins (including guests!) -->
+        <?php if (empty($_SESSION['is_admin'])): ?>
             <li class="nav-item position-relative">
               <a class="nav-link" href="<?= BASE_URL ?>/cart.php">
                 <i class="bi bi-cart3"></i> Cart
