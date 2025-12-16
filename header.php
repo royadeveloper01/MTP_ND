@@ -12,6 +12,9 @@ require_once __DIR__ . '/db.php';
     <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
 
+    <?php if (!empty($page_css)): ?>
+        <link rel="stylesheet" href="<?= BASE_URL . $page_css ?>">
+    <?php endif; ?>
 
 </head>
 <body>
@@ -22,7 +25,7 @@ require_once __DIR__ . '/db.php';
 </video>
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0a437cff;">
-  <div class="container-fluid">
+  <div class="container">
 
     <a class="navbar-brand" href="<?= BASE_URL ?>/index.php">MTP Store</a>
 

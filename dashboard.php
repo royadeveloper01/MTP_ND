@@ -17,6 +17,7 @@ $stats = [
     'products'   => 0,
     'orders'     => 0,
     'customers'  => 0,
+    'attributes' => 0,
     'cart_items' => 0,
 ];
 
@@ -39,11 +40,22 @@ try {
         if ($result) {
             $stats['customers'] = (int)$result->fetch_assoc()['count'];
         }
+
+        // Calculate attributes count safely (Sizes + Colors)
+        $resSizes = $conn->query("SELECT COUNT(*) FROM sizes");
+        if ($resSizes) {
+            $stats['attributes'] += (int)$resSizes->fetch_row()[0];
+        }
+        $resColors = $conn->query("SELECT COUNT(*) FROM colors");
+        if ($resColors) {
+            $stats['attributes'] += (int)$resColors->fetch_row()[0];
+        }
     } else {
         // Regular user stats
-        $result = $conn->query("SELECT COUNT(*) as count FROM products");
+        $result = $conn->query("SELECT COUNT(*) AS total_sizes, (SELECT COUNT(*) FROM colors) AS total_colors FROM sizes");
         if ($result) {
-            $stats['products'] = (int)$result->fetch_assoc()['count'];
+            $row = $result->fetch_assoc();
+            $stats['attributes'] = (int)$row['total_sizes'] + (int)$row['total_colors'];
         }
 
         // Get cart item count from session
@@ -63,138 +75,12 @@ try {
 } catch (Exception $e) {
     $errors[] = "Error loading dashboard data: " . $e->getMessage();
 }
+
+$page_css = '/assets/css/dashboard.css';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - MTP_ND</title>
-    <style>
-        body {
-            background-color: #f5f7fb;
-        }
-
-        .dashboard-wrapper {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-
-        .dashboard-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .dashboard-title h1 {
-            margin: 0;
-            font-size: 1.6rem;
-            font-weight: 600;
-        }
-
-        .dashboard-subtitle {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .role-badge {
-            padding: 0.35rem 0.8rem;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .role-admin {
-            background-color: #e7f1ff;
-            color: #0d6efd;
-        }
-
-        .role-user {
-            background-color: #e7f7ef;
-            color: #198754;
-        }
-
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: #ffffff;
-            border-radius: 1rem;
-            padding: 1rem 1.2rem;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
-        }
-
-        .stat-card h3 {
-            margin: 0;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #6c757d;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0.4rem 0 0.2rem 0;
-        }
-
-        .stat-card a {
-            font-size: 0.85rem;
-            text-decoration: none;
-            color: #0d6efd;
-        }
-
-        .stat-card a:hover {
-            text-decoration: underline;
-        }
-
-        .dashboard-actions .card {
-            border-radius: 1rem;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
-        }
-
-        .dashboard-actions h2 {
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .quick-links li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.4rem 0;
-        }
-
-        .quick-links a {
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 576px) {
-            .dashboard-title {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
-</head>
-<body>
-    <?php include 'header.php'; ?>
+<?php include 'header.php'; ?>
     
+
     <div class="container dashboard-wrapper">
         <div class="dashboard-title">
             <div>
@@ -258,7 +144,7 @@ try {
                 </div>
                 <div class="stat-card">
                     <h3>Attributes</h3>
-                    <p class="stat-number"><?= ($conn->query("SELECT COUNT(*) FROM sizes")->fetch_row()[0] ?? 0) + ($conn->query("SELECT COUNT(*) FROM colors")->fetch_row()[0] ?? 0) ?></p>
+                    <p class="stat-number"><?php echo $stats['attributes']; ?></p>
                     <a href="<?php echo BASE_URL; ?>/attributes.php">Manage Sizes & Colors</a>
                 </div>
             <?php else: ?>
@@ -342,5 +228,3 @@ try {
     </div>
     
     <?php include 'footer.php'; ?>
-</body>
-</html>
