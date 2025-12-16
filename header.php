@@ -1,5 +1,13 @@
 <?php
 require_once __DIR__ . '/db.php';
+
+// Calculate cart item count for badge (only if session cart exists)
+$cart_count = 0;
+if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+    foreach ($_SESSION['cart'] as $item) {
+        $cart_count += $item['qty'] ?? 1;  // Add quantity (default 1 if missing)
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -12,10 +20,13 @@ require_once __DIR__ . '/db.php';
     <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
 
-    <?php if (!empty($page_css)): ?>
-        <link rel="stylesheet" href="<?= BASE_URL . $page_css ?>">
-    <?php endif; ?>
-
+    <style>
+/* Cart badge styling – moved from header.php */
+.cart-badge {
+    font-size: 0.7rem;
+    vertical-align: top;
+}
+    </style>
 </head>
 <body>
 
@@ -25,7 +36,7 @@ require_once __DIR__ . '/db.php';
 </video>
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0a437cff;">
-  <div class="container">
+  <div class="container-fluid">
 
     <a class="navbar-brand" href="<?= BASE_URL ?>/index.php">MTP Store</a>
 
@@ -42,13 +53,14 @@ require_once __DIR__ . '/db.php';
           <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
         </li>
 
-        <?php if (!empty($_SESSION['is_admin'])): ?>
-            <li class="nav-item">
-              <a class="nav-link" href="<?= BASE_URL ?>/products/list.php">Manage Products</a>
-            </li>
-        <?php else: ?>
-            <li class="nav-item">
-              <a class="nav-link" href="<?= BASE_URL ?>/index.php">Shop</a>
+        <?php if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])): ?>
+            <li class="nav-item position-relative">
+              <a class="nav-link" href="<?= BASE_URL ?>/cart.php">
+                <i class="bi bi-cart3"></i> Cart
+                <?php if ($cart_count > 0): ?>
+                    <span class="badge bg-danger rounded-pill cart-badge"><?= $cart_count ?></span>
+                <?php endif; ?>
+              </a>
             </li>
         <?php endif; ?>
 
