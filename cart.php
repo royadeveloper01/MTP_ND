@@ -8,9 +8,12 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-// Get success message
+// Success message
 $cart_success_message = $_SESSION['cart_success'] ?? '';
 unset($_SESSION['cart_success']);
+
+// Error message (new)
+$cart_error_message = '';
 
 $cart_items = [];
 $total = 0;
@@ -59,12 +62,14 @@ try {
     }
 } catch (Exception $e) {
     error_log("Cart error: " . $e->getMessage());
+    $cart_error_message = 'There was a problem loading your cart. Please try again later.';
 }
 ?>
 
 <div class="container my-5">
     <h1 class="mb-4"><i class="bi bi-cart4"></i> Your Shopping Cart</h1>
 
+    <!-- Success Message -->
     <?php if (!empty($cart_success_message)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($cart_success_message) ?>
@@ -72,7 +77,20 @@ try {
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($cart_items)): ?>
+    <!-- Error Message (new) -->
+    <?php if (!empty($cart_error_message)): ?>
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($cart_error_message) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($cart_error_message)): ?>
+        <!-- Show error and stop rendering cart -->
+        <div class="text-center py-5">
+            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary">Back to Shop</a>
+        </div>
+    <?php elseif (!empty($cart_items)): ?>
+        <!-- Normal cart view -->
         <form method="POST" action="<?= BASE_URL ?>/update_cart.php">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">

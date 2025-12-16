@@ -9,8 +9,17 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     }
 }
 
-// Determine current page for page-specific CSS
+// Determine current page
 $current_page = basename($_SERVER['PHP_SELF']);
+
+// Page-specific CSS mapping (clean, scalable, and maintainable)
+$page_css_map = [
+    'dashboard.php' => 'dashboard.css',
+    'index.php'     => 'shop.css',
+    'cart.php'      => 'cart.css',
+];
+
+$admin_pages = ['list.php', 'add.php', 'edit.php'];
 ?>
 <!doctype html>
 <html lang="en">
@@ -23,17 +32,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
 
-    <!-- Page-specific CSS (fixed as requested) -->
-    <?php if ($current_page === 'dashboard.php'): ?>
-        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/dashboard.css">
+    <!-- Page-specific CSS (improved with mapping array) -->
+    <?php if (isset($page_css_map[$current_page])): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>">
     <?php endif; ?>
-    <?php if ($current_page === 'index.php'): ?>
-        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/shop.css">
-    <?php endif; ?>
-    <?php if ($current_page === 'cart.php'): ?>
-        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/cart.css">
-    <?php endif; ?>
-    <?php if (strpos($current_page, 'list.php') !== false || strpos($current_page, 'add.php') !== false || strpos($current_page, 'edit.php') !== false): ?>
+
+    <!-- Admin pages CSS (exact match using in_array) -->
+    <?php if (in_array($current_page, $admin_pages)): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
     <?php endif; ?>
 </head>
