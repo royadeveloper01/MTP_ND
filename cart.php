@@ -12,7 +12,7 @@ if (!empty($_SESSION['is_admin'])) {
 $cart_success_message = $_SESSION['cart_success'] ?? '';
 unset($_SESSION['cart_success']);
 
-// Error message (new)
+// Error message
 $cart_error_message = '';
 
 $cart_items = [];
@@ -77,20 +77,20 @@ try {
         </div>
     <?php endif; ?>
 
-    <!-- Error Message (new) -->
+    <!-- MAIN CONDITIONAL LOGIC -->
     <?php if (!empty($cart_error_message)): ?>
+        <!-- ERROR STATE -->
         <div class="alert alert-danger" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($cart_error_message) ?>
         </div>
-    <?php endif; ?>
-
-    <?php if (!empty($cart_error_message)): ?>
-        <!-- Show error and stop rendering cart -->
         <div class="text-center py-5">
-            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary">Back to Shop</a>
+            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg">
+                <i class="bi bi-arrow-left-circle"></i> Back to Shop
+            </a>
         </div>
+
     <?php elseif (!empty($cart_items)): ?>
-        <!-- Normal cart view -->
+        <!-- NORMAL CART WITH ITEMS -->
         <form method="POST" action="<?= BASE_URL ?>/update_cart.php">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -151,7 +151,9 @@ try {
                 </div>
             </div>
         </form>
+
     <?php else: ?>
+        <!-- EMPTY CART STATE -->
         <div class="text-center py-5">
             <i class="bi bi-cart-x empty-cart-icon"></i>
             <h3 class="mt-3 text-muted">Your cart is empty</h3>

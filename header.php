@@ -12,7 +12,7 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 // Determine current page
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Page-specific CSS mapping (clean, scalable, and maintainable)
+// Page-specific CSS mapping (clean & scalable)
 $page_css_map = [
     'dashboard.php' => 'dashboard.css',
     'index.php'     => 'shop.css',
@@ -32,12 +32,12 @@ $admin_pages = ['list.php', 'add.php', 'edit.php'];
     <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
 
-    <!-- Page-specific CSS (improved with mapping array) -->
+    <!-- Page-specific CSS -->
     <?php if (isset($page_css_map[$current_page])): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>">
     <?php endif; ?>
 
-    <!-- Admin pages CSS (exact match using in_array) -->
+    <!-- Admin pages CSS -->
     <?php if (in_array($current_page, $admin_pages)): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
     <?php endif; ?>
@@ -61,6 +61,14 @@ $admin_pages = ['list.php', 'add.php', 'edit.php'];
           <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
         </li>
 
+        <!-- Manage Products for Admins -->
+        <?php if (!empty($_SESSION['is_admin'])): ?>
+            <li class="nav-item">
+              <a class="nav-link" href="<?= BASE_URL ?>/products/list.php">Manage Products</a>
+            </li>
+        <?php endif; ?>
+
+        <!-- Cart with Badge for Customers -->
         <?php if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])): ?>
             <li class="nav-item position-relative">
               <a class="nav-link" href="<?= BASE_URL ?>/cart.php">
@@ -72,6 +80,7 @@ $admin_pages = ['list.php', 'add.php', 'edit.php'];
             </li>
         <?php endif; ?>
 
+        <!-- Login / Logout -->
         <?php if (!empty($_SESSION['loggedin'])): ?>
             <li class="nav-item">
               <a class="nav-link" href="<?= BASE_URL ?>/auth/logout.php">
