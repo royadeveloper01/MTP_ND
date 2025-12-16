@@ -43,11 +43,6 @@ a:hover {
 /* === Main Container === */
 .container {
     width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
 }
 
