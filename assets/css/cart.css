@@ -21,9 +21,3 @@
     font-size: 5rem;
     color: #ccc;
 }
-/* Styling for product thumbnails in the cart table */
-.cart-product-image {
-    max-width: 80px;
-    height: auto;
-    display: block;
-}
