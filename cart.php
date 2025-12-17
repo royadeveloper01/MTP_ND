@@ -19,8 +19,36 @@ $cart_items = [];
 $total = 0;
 
 try {
-    if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
-        $session_cart = $_SESSION['cart'];
+    $session_cart = [];
+    $is_logged_in = !empty($_SESSION['loggedin']) && !empty($_SESSION['id']);
+
+    if ($is_logged_in) {
+        // FETCH FROM DATABASE if logged in (Items merged during login.php are here)
+        $user_id = $_SESSION['id'];
+        $stmt = $conn->prepare("SELECT product_id, quantity FROM cart WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $db_res = $stmt->get_result();
+        
+        while ($row = $db_res->fetch_assoc()) {
+            // We use a unique key to match your existing loop logic
+            $key = $row['product_id']; 
+            $session_cart[$key] = [
+                'product_id' => $row['product_id'],
+                'qty'        => $row['quantity'],
+                'size'       => 'default', // Database table lacks size/color columns
+                'color'      => 'default'
+            ];
+        }
+        $stmt->close();
+    } else {
+        // FETCH FROM SESSION if guest
+        if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+            $session_cart = $_SESSION['cart'];
+        }
+    }
+
+    if (!empty($session_cart)) {
         $product_ids = array_unique(array_column($session_cart, 'product_id'));
 
         if (!empty($product_ids)) {
@@ -69,7 +97,6 @@ try {
 <div class="container my-5">
     <h1 class="mb-4"><i class="bi bi-cart4"></i> Your Shopping Cart</h1>
 
-    <!-- Success Message -->
     <?php if (!empty($cart_success_message)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i> <?= htmlspecialchars($cart_success_message) ?>
@@ -77,9 +104,7 @@ try {
         </div>
     <?php endif; ?>
 
-    <!-- MAIN CONDITIONAL LOGIC -->
     <?php if (!empty($cart_error_message)): ?>
-        <!-- ERROR STATE -->
         <div class="alert alert-danger" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($cart_error_message) ?>
         </div>
@@ -90,7 +115,6 @@ try {
         </div>
 
     <?php elseif (!empty($cart_items)): ?>
-        <!-- NORMAL CART WITH ITEMS -->
         <form method="POST" action="<?= BASE_URL ?>/update_cart.php">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -153,7 +177,6 @@ try {
         </form>
 
     <?php else: ?>
-        <!-- EMPTY CART STATE -->
         <div class="text-center py-5">
             <i class="bi bi-cart-x empty-cart-icon"></i>
             <h3 class="mt-3 text-muted">Your cart is empty</h3>
