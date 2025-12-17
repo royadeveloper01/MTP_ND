@@ -1,5 +1,7 @@
 <?php
-require_once __DIR__ . '/db.php'; // Ensure db.php is included directly
+// 1. ADDED auth.php back to handle 'Remember Me' and Session initialization correctly
+require_once __DIR__ . '/auth/auth.php'; 
+require_once __DIR__ . '/db.php'; 
 
 // User must be logged in and not an admin
 if (empty($_SESSION['loggedin']) || !empty($_SESSION['is_admin'])) {
@@ -10,7 +12,7 @@ if (empty($_SESSION['loggedin']) || !empty($_SESSION['is_admin'])) {
 $user_id = $_SESSION['id'];
 $cart_from_db = [];
 
-// 1. FIXED: Fetch product_id, quantity, size, and color from DB
+// FETCH: Size and color included for variation support
 $stmt = $conn->prepare("SELECT product_id, quantity, size, color FROM cart WHERE user_id = ?");
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
@@ -31,7 +33,6 @@ $error = '';
 $is_in_transaction = false;
 
 try {
-    // 2. Extract product IDs safely
     $product_ids = array_unique(array_column($cart_from_db, 'product_id'));
     
     if (empty($product_ids)) {
@@ -52,7 +53,6 @@ try {
         $product_map[$p['id']] = $p;
     }
 
-    // 3. FIXED: Match DB items with Product Details, including size and color
     foreach ($cart_from_db as $item) {
         $pid = $item['product_id'];
         if (isset($product_map[$pid])) {
@@ -62,8 +62,8 @@ try {
             $final_items[] = [
                 'id'       => $pid,
                 'name'     => $product['name'],
-                'size'     => $item['size'],  // Pulled from cart table
-                'color'    => $item['color'], // Pulled from cart table
+                'size'     => $item['size'],
+                'color'    => $item['color'],
                 'price'    => (float)$product['price'],
                 'quantity' => $qty
             ];
@@ -75,7 +75,7 @@ try {
         throw new Exception("Invalid products in cart.");
     }
 
-    // 4. Database Transaction
+    // Database Transaction
     $conn->begin_transaction();
     $is_in_transaction = true;
 
@@ -87,7 +87,7 @@ try {
     $order_id = $stmt->insert_id;
     $stmt->close();
 
-    // 5. INSERT INTO order_items with correct size and color
+    // INSERT: variations correctly recorded in order history
     $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, size, color, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
     foreach ($final_items as $item) {
         $stmt->bind_param('iissid', $order_id, $item['id'], $item['size'], $item['color'], $item['quantity'], $item['price']);
@@ -95,7 +95,6 @@ try {
     }
     $stmt->close();
 
-    // Clear cart after order
     $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
