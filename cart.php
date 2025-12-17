@@ -12,9 +12,7 @@ if (!empty($_SESSION['is_admin'])) {
 $cart_success_message = $_SESSION['cart_success'] ?? '';
 unset($_SESSION['cart_success']);
 
-// Error message
 $cart_error_message = '';
-
 $cart_items = [];
 $total = 0;
 
@@ -25,20 +23,18 @@ try {
     if ($is_logged_in) {
         // FETCH FROM DATABASE if logged in
         $user_id = $_SESSION['id'];
-        // FIXED: Now fetching size and color from the database instead of hardcoding 'default'
         $stmt = $conn->prepare("SELECT id, product_id, size, color, quantity FROM cart WHERE user_id = ?");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $db_res = $stmt->get_result();
         
         while ($row = $db_res->fetch_assoc()) {
-            // Use the cart table's primary ID as the key for reliable updates
             $key = $row['id']; 
             $session_cart[$key] = [
                 'product_id' => $row['product_id'],
                 'qty'        => $row['quantity'],
-                'size'       => $row['size'], // Pulled from DB
-                'color'      => $row['color'] // Pulled from DB
+                'size'       => $row['size'],
+                'color'      => $row['color']
             ];
         }
         $stmt->close();
@@ -109,12 +105,6 @@ try {
         <div class="alert alert-danger" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($cart_error_message) ?>
         </div>
-        <div class="text-center py-5">
-            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg">
-                <i class="bi bi-arrow-left-circle"></i> Back to Shop
-            </a>
-        </div>
-
     <?php elseif (!empty($cart_items)): ?>
         <form method="POST" action="<?= BASE_URL ?>/update_cart.php">
             <div class="table-responsive">
@@ -146,7 +136,11 @@ try {
                                 <td><?= htmlspecialchars($item['size']) ?></td>
                                 <td><?= htmlspecialchars($item['color']) ?></td>
                                 <td>
-                                    <input type="number" name="qty[<?= $item['cart_key'] ?>]" value="<?= $item['quantity'] ?>" min="0" class="form-control w-75">
+                                    <input type="number" 
+                                           name="qty[<?= htmlspecialchars((string)$item['cart_key']) ?>]" 
+                                           value="<?= htmlspecialchars((string)$item['quantity']) ?>" 
+                                           min="0" 
+                                           class="form-control w-75">
                                 </td>
                                 <td><strong>$<?= number_format($item['subtotal'], 2) ?></strong></td>
                                 <td>
@@ -176,15 +170,11 @@ try {
                 </div>
             </div>
         </form>
-
     <?php else: ?>
         <div class="text-center py-5">
             <i class="bi bi-cart-x empty-cart-icon"></i>
             <h3 class="mt-3 text-muted">Your cart is empty</h3>
-            <p class="text-muted">Looks like you haven't added anything yet.</p>
-            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">
-                <i class="bi bi-shop"></i> Start Shopping
-            </a>
+            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">Start Shopping</a>
         </div>
     <?php endif; ?>
 </div>

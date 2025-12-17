@@ -9,12 +9,14 @@ if (!empty($_SESSION['is_admin'])) {
 
 // RECEIVE PRODUCT DATA
 $id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : null;
+// We trim here to remove accidental whitespace
 $size = isset($_POST['size']) ? trim($_POST['size']) : 'default';
 $color = isset($_POST['color']) ? trim($_POST['color']) : 'default';
 $qty = 1; 
 
-// RESTORED VALIDATION: Ensure size and color are not empty strings if provided
-if (!$id || (isset($_POST['size']) && $_POST['size'] === '') || (isset($_POST['color']) && $_POST['color'] === '')) {
+// FIXED: Now using the trimmed $size and $color variables for validation.
+// This prevents inputs consisting only of spaces from passing the check.
+if (!$id || (isset($_POST['size']) && $size === '') || (isset($_POST['color']) && $color === '')) {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
@@ -36,21 +38,18 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
     // 1. LOGGED IN USER: Save directly to database
     $user_id = $_SESSION['id'];
 
-    // FIXED: Check for specific variations (ID + SIZE + COLOR) in DB
     $check_stmt = $conn->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ? AND size = ? AND color = ?");
     $check_stmt->bind_param("iiss", $user_id, $id, $size, $color);
     $check_stmt->execute();
     $res = $check_stmt->get_result();
 
     if ($row = $res->fetch_assoc()) {
-        // Update existing row
         $new_qty = $row['quantity'] + $qty;
         $update_stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
         $update_stmt->bind_param("ii", $new_qty, $row['id']);
         $update_stmt->execute();
         $update_stmt->close();
     } else {
-        // FIXED: Insert new row including size and color
         $insert_stmt = $conn->prepare("INSERT INTO cart (user_id, product_id, size, color, quantity) VALUES (?, ?, ?, ?, ?)");
         $insert_stmt->bind_param("iissi", $user_id, $id, $size, $color, $qty);
         $insert_stmt->execute();
@@ -62,6 +61,7 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
     // 2. GUEST USER: Save to session cart
     if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
     
+    // The keys will now be cleaner because $size and $color are trimmed
     $cart_key = $id . '-' . $size . '-' . $color;
 
     if (!isset($_SESSION['cart'][$cart_key])) {
