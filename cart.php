@@ -8,7 +8,7 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-// Success message
+// Success message handling
 $cart_success_message = $_SESSION['cart_success'] ?? '';
 unset($_SESSION['cart_success']);
 
@@ -21,7 +21,7 @@ try {
     $is_logged_in = !empty($_SESSION['loggedin']) && !empty($_SESSION['id']);
 
     if ($is_logged_in) {
-        // FETCH FROM DATABASE if logged in
+        // 1. FETCH FROM DATABASE if logged in
         $user_id = $_SESSION['id'];
         $stmt = $conn->prepare("SELECT id, product_id, size, color, quantity FROM cart WHERE user_id = ?");
         $stmt->bind_param("i", $user_id);
@@ -39,7 +39,7 @@ try {
         }
         $stmt->close();
     } else {
-        // FETCH FROM SESSION if guest
+        // 2. FETCH FROM SESSION if guest
         if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
             $session_cart = $_SESSION['cart'];
         }
@@ -127,9 +127,9 @@ try {
                                 <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
                                 <td>
                                     <?php if (!empty($item['image'])): ?>
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image">
+                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail" style="max-width: 80px;">
                                     <?php else: ?>
-                                        <div class="cart-item-placeholder">No Image</div>
+                                        <div class="text-muted small">No Image</div>
                                     <?php endif; ?>
                                 </td>
                                 <td>$<?= number_format($item['price'], 2) ?></td>
@@ -172,7 +172,7 @@ try {
         </form>
     <?php else: ?>
         <div class="text-center py-5">
-            <i class="bi bi-cart-x empty-cart-icon"></i>
+            <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
             <h3 class="mt-3 text-muted">Your cart is empty</h3>
             <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">Start Shopping</a>
         </div>
