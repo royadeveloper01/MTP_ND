@@ -130,26 +130,27 @@ try {
                                 <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
                                 <td>
                                     <?php if (!empty($item['image'])): ?>
-<<<<<<< HEAD
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-product-image">
+                                        <img src="<?= htmlspecialchars($item['image']) ?>" 
+                                             alt="<?= htmlspecialchars($item['name']) ?>" 
+                                             class="img-thumbnail cart-product-image">
                                     <?php else: ?>
                                         <div class="text-muted small">No Image</div>
-=======
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image">
-                                    <?php else: ?>
-                                        <div class="cart-item-placeholder">No Image</div>
->>>>>>> 21db651 (cart now has option to go back to shopping and delete the manage product on top right in admin, change shop on top right to cart)
                                     <?php endif; ?>
                                 </td>
                                 <td>$<?= number_format($item['price'], 2) ?></td>
                                 <td><?= htmlspecialchars($item['size']) ?></td>
                                 <td><?= htmlspecialchars($item['color']) ?></td>
                                 <td>
-                                    <input type="number" name="qty[<?= htmlspecialchars((string)$item['cart_key']) ?>]" value="<?= htmlspecialchars((string)$item['quantity']) ?>" min="0" class="form-control w-75">
+                                    <input type="number" 
+                                           name="qty[<?= htmlspecialchars((string)$item['cart_key']) ?>]" 
+                                           value="<?= htmlspecialchars((string)$item['quantity']) ?>" 
+                                           min="0" 
+                                           class="form-control w-75">
                                 </td>
                                 <td><strong>$<?= number_format($item['subtotal'], 2) ?></strong></td>
                                 <td>
-                                    <a href="<?= BASE_URL ?>/remove_from_cart.php?key=<?= urlencode($item['cart_key']) ?>" class="btn btn-danger btn-sm">
+                                    <a href="<?= BASE_URL ?>/remove_from_cart.php?key=<?= urlencode($item['cart_key']) ?>" 
+                                       class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </td>
@@ -175,19 +176,12 @@ try {
                 </div>
             </div>
         </form>
+
     <?php else: ?>
         <div class="text-center py-5">
-<<<<<<< HEAD
-      <i class="bi bi-cart-x text-muted empty-cart-icon"></i>            <h3 class="mt-3 text-muted">Your cart is empty</h3>
-            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">Start Shopping</a>
-=======
-            <i class="bi bi-cart-x empty-cart-icon"></i>
+            <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
             <h3 class="mt-3 text-muted">Your cart is empty</h3>
-            <p class="text-muted">Looks like you haven't added anything yet.</p>
-            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">
-                <i class="bi bi-shop"></i> Start Shopping
-            </a>
->>>>>>> 21db651 (cart now has option to go back to shopping and delete the manage product on top right in admin, change shop on top right to cart)
+            <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">Start Shopping</a>
         </div>
     <?php endif; ?>
 </div>
