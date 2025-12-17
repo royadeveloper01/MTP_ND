@@ -42,37 +42,19 @@ CREATE TABLE products (
   INDEX idx_product_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. Cart Table
--- This table is no longer used as the cart is session-based.
--- It is kept here for historical reference but can be safely removed.
--- -----------------------------------------------------------------
-CREATE TABLE cart (
-  id INT NOT NULL AUTO_INCREMENT,
-  user_id INT NOT NULL,
-  product_id INT NOT NULL,
-  quantity INT NOT NULL DEFAULT 1,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_user_product (user_id, product_id),
-  CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_cart_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- NEW: Sizes Table (Normalized)
+-- 3. Attributes Tables (Sizes & Colors)
+-- Normalized tables for product variations.
 -- -----------------------------------------------------------------
 CREATE TABLE sizes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- NEW: Colors Table (Normalized)
--- -----------------------------------------------------------------
 CREATE TABLE colors (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- NEW: Product_Sizes Junction Table
--- -----------------------------------------------------------------
 CREATE TABLE product_sizes (
   product_id INT NOT NULL,
   size_id INT NOT NULL,
@@ -81,7 +63,31 @@ CREATE TABLE product_sizes (
   CONSTRAINT fk_ps_size FOREIGN KEY (size_id) REFERENCES sizes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Orders Table
+CREATE TABLE product_colors (
+  product_id INT NOT NULL,
+  color_id INT NOT NULL,
+  PRIMARY KEY (product_id, color_id),
+  CONSTRAINT fk_pc_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  CONSTRAINT fk_pc_color FOREIGN KEY (color_id) REFERENCES colors(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. Cart Table
+-- Stores items users have added to their shopping cart.
+-- -----------------------------------------------------------------
+CREATE TABLE cart (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  product_id INT NOT NULL,
+  size VARCHAR(50) DEFAULT 'default',
+  color VARCHAR(50) DEFAULT 'default',
+  quantity INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_product_variation (user_id, product_id, size, color),
+  CONSTRAINT fk_cart_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_cart_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. Orders Table
 -- Stores high-level information for each order.
 -- -----------------------------------------------------------------
 CREATE TABLE orders (
@@ -97,17 +103,7 @@ CREATE TABLE orders (
   CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- NEW: Product_Colors Junction Table
--- -----------------------------------------------------------------
-CREATE TABLE product_colors (
-  product_id INT NOT NULL,
-  color_id INT NOT NULL,
-  PRIMARY KEY (product_id, color_id),
-  CONSTRAINT fk_pc_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-  CONSTRAINT fk_pc_color FOREIGN KEY (color_id) REFERENCES colors(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 5. Order Items Table
+-- 6. Order Items Table
 -- Stores the individual products included in each order.
 -- -----------------------------------------------------------------
 CREATE TABLE order_items (

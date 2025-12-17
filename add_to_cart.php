@@ -7,17 +7,15 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
-
 // RECEIVE PRODUCT DATA
-$id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;
-$size = isset($_POST['size']) ? trim($_POST['size']) : 'default'; // Use 'default' if no size
-$color = isset($_POST['color']) ? trim($_POST['color']) : 'default'; // Use 'default' if no color
-$qty = 1; // Always add one at a time from the product page
+$id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : null;
+// Trim to remove accidental whitespace
+$size = isset($_POST['size']) ? trim($_POST['size']) : 'default';
+$color = isset($_POST['color']) ? trim($_POST['color']) : 'default';
+$qty = 1; 
 
-if (!$id || (isset($_POST['size']) && $size === '') || (isset($_POST['color']) && $color === '')) {
-    // Fallback redirect if no product ID, or if a size/color was required but not provided.
-    // This prevents adding items with an empty selection.
+// Validation: prevent empty strings or missing IDs
+if (!$id || $size === '' || $color === '') {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
@@ -33,14 +31,48 @@ if ($stmt->get_result()->num_rows === 0) {
 }
 $stmt->close();
 
-// Create a unique key for the cart item based on product ID, size, and color
-$cart_key = $id . '-' . $size . '-' . $color;
+// --- LOGIC START: DATABASE VS SESSION ---
 
-// ADD to session cart
-if (!isset($_SESSION['cart'][$cart_key])) {
-    $_SESSION['cart'][$cart_key] = ['product_id' => $id, 'size' => $size, 'color' => $color, 'qty' => $qty];
+if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
+    // 1. LOGGED IN USER: Save directly to database
+    $user_id = $_SESSION['id'];
+
+    /* Using an atomic query to prevent race conditions.
+       This works because of the UNIQUE INDEX (user_id, product_id, size, color) 
+       defined in your SQL migration.
+    */
+    $sql = "INSERT INTO cart (user_id, product_id, size, color, quantity) 
+            VALUES (?, ?, ?, ?, ?) 
+            ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)";
+            
+    try {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iissi", $user_id, $id, $size, $color, $qty);
+        $stmt->execute();
+        $stmt->close();
+    } catch (Exception $e) {
+        error_log("Add to cart DB Error: " . $e->getMessage());
+    }
+
 } else {
-    $_SESSION['cart'][$cart_key]['qty'] += $qty;
+    // 2. GUEST USER: Save to session cart
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = array();
+    }
+    
+    // Create a unique key for the session array based on variations
+    $cart_key = $id . '-' . $size . '-' . $color;
+
+    if (!isset($_SESSION['cart'][$cart_key])) {
+        $_SESSION['cart'][$cart_key] = [
+            'product_id' => $id, 
+            'size' => $size, 
+            'color' => $color, 
+            'qty' => $qty
+        ];
+    } else {
+        $_SESSION['cart'][$cart_key]['qty'] += $qty;
+    }
 }
 
 // REDIRECT TO CART PAGE
