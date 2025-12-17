@@ -39,31 +39,8 @@ $page_css_map = [
     <title>MTP ND Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
     
-    <style>
-        /* 1. Moved navbar color here to fix the inline style error */
-        .app-navbar {
-            background-color: #0a437cff !important;
-        }
-
-        /* 2. Added styling for the background video */
-        #bgVideo {
-            position: fixed;
-            right: 0;
-            bottom: 0;
-            min-width: 100%;
-            min-height: 100%;
-            z-index: -1;
-            object-fit: cover;
-        }
-
-        /* 3. Ensure content is visible over video */
-        body {
-            position: relative;
-            z-index: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
 
     <?php if (isset($page_css_map[$current_page])): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>">
