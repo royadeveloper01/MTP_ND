@@ -23,21 +23,22 @@ try {
     $is_logged_in = !empty($_SESSION['loggedin']) && !empty($_SESSION['id']);
 
     if ($is_logged_in) {
-        // FETCH FROM DATABASE if logged in (Items merged during login.php are here)
+        // FETCH FROM DATABASE if logged in
         $user_id = $_SESSION['id'];
-        $stmt = $conn->prepare("SELECT product_id, quantity FROM cart WHERE user_id = ?");
+        // FIXED: Now fetching size and color from the database instead of hardcoding 'default'
+        $stmt = $conn->prepare("SELECT id, product_id, size, color, quantity FROM cart WHERE user_id = ?");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $db_res = $stmt->get_result();
         
         while ($row = $db_res->fetch_assoc()) {
-            // We use a unique key to match your existing loop logic
-            $key = $row['product_id']; 
+            // Use the cart table's primary ID as the key for reliable updates
+            $key = $row['id']; 
             $session_cart[$key] = [
                 'product_id' => $row['product_id'],
                 'qty'        => $row['quantity'],
-                'size'       => 'default', // Database table lacks size/color columns
-                'color'      => 'default'
+                'size'       => $row['size'], // Pulled from DB
+                'color'      => $row['color'] // Pulled from DB
             ];
         }
         $stmt->close();
@@ -78,8 +79,8 @@ try {
                         'name'      => $product['name'],
                         'image'     => $product['image'],
                         'price'     => $product['price'],
-                        'size'      => $item['size'] === 'default' ? '-' : $item['size'],
-                        'color'     => $item['color'] === 'default' ? '-' : $item['color'],
+                        'size'      => ($item['size'] === 'default' || empty($item['size'])) ? '-' : $item['size'],
+                        'color'     => ($item['color'] === 'default' || empty($item['color'])) ? '-' : $item['color'],
                         'quantity'  => $quantity,
                         'subtotal'  => $subtotal
                     ];
@@ -136,7 +137,7 @@ try {
                                 <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
                                 <td>
                                     <?php if (!empty($item['image'])): ?>
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image">
+                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image" style="width: 80px;">
                                     <?php else: ?>
                                         <div class="cart-item-placeholder">No Image</div>
                                     <?php endif; ?>
@@ -145,7 +146,7 @@ try {
                                 <td><?= htmlspecialchars($item['size']) ?></td>
                                 <td><?= htmlspecialchars($item['color']) ?></td>
                                 <td>
-                                    <input type="number" name="qty[<?= $item['cart_key'] ?>]" value="<?= $item['quantity'] ?>" min="1" class="form-control w-75">
+                                    <input type="number" name="qty[<?= $item['cart_key'] ?>]" value="<?= $item['quantity'] ?>" min="0" class="form-control w-75">
                                 </td>
                                 <td><strong>$<?= number_format($item['subtotal'], 2) ?></strong></td>
                                 <td>

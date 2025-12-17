@@ -13,7 +13,8 @@ $size = isset($_POST['size']) ? trim($_POST['size']) : 'default';
 $color = isset($_POST['color']) ? trim($_POST['color']) : 'default';
 $qty = 1; 
 
-if (!$id) {
+// RESTORED VALIDATION: Ensure size and color are not empty strings if provided
+if (!$id || (isset($_POST['size']) && $_POST['size'] === '') || (isset($_POST['color']) && $_POST['color'] === '')) {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
@@ -35,9 +36,9 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
     // 1. LOGGED IN USER: Save directly to database
     $user_id = $_SESSION['id'];
 
-    // Check if this specific product is already in the user's DB cart
-    $check_stmt = $conn->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?");
-    $check_stmt->bind_param("ii", $user_id, $id);
+    // FIXED: Check for specific variations (ID + SIZE + COLOR) in DB
+    $check_stmt = $conn->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ? AND size = ? AND color = ?");
+    $check_stmt->bind_param("iiss", $user_id, $id, $size, $color);
     $check_stmt->execute();
     $res = $check_stmt->get_result();
 
@@ -49,16 +50,16 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
         $update_stmt->execute();
         $update_stmt->close();
     } else {
-        // Insert new row
-        $insert_stmt = $conn->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)");
-        $insert_stmt->bind_param("iii", $user_id, $id, $qty);
+        // FIXED: Insert new row including size and color
+        $insert_stmt = $conn->prepare("INSERT INTO cart (user_id, product_id, size, color, quantity) VALUES (?, ?, ?, ?, ?)");
+        $insert_stmt->bind_param("iissi", $user_id, $id, $size, $color, $qty);
         $insert_stmt->execute();
         $insert_stmt->close();
     }
     $check_stmt->close();
 
 } else {
-    // 2. GUEST USER: Save to session cart (your original logic)
+    // 2. GUEST USER: Save to session cart
     if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
     
     $cart_key = $id . '-' . $size . '-' . $color;

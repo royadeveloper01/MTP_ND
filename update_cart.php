@@ -11,30 +11,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qty']) && is_array($_
     
     $is_logged_in = !empty($_SESSION['loggedin']) && !empty($_SESSION['id']);
 
-    if ($is_logged_in) {
-        // --- LOGIC FOR LOGGED IN USER: Update Database ---
-        $user_id = $_SESSION['id'];
+    foreach ($_POST['qty'] as $key => $new_qty) {
+        $new_qty = (int)$new_qty; // Allow 0 for deletion
+        
+        if ($is_logged_in) {
+            // --- LOGIC FOR LOGGED IN USER ---
+            // The $key is the unique 'id' of the row in the cart table
+            $cart_id = (int)$key;
+            $user_id = (int)$_SESSION['id'];
 
-        foreach ($_POST['qty'] as $product_id => $new_qty) {
-            $new_qty = max(1, (int)$new_qty); // Ensure quantity is at least 1
-            $product_id = (int)$product_id;
-
-            $stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?");
-            $stmt->bind_param("iii", $new_qty, $user_id, $product_id);
+            if ($new_qty <= 0) {
+                // Restore deletion logic: If qty is 0 or less, remove the item
+                $stmt = $conn->prepare("DELETE FROM cart WHERE id = ? AND user_id = ?");
+                $stmt->bind_param("ii", $cart_id, $user_id);
+            } else {
+                // Update specific row quantity (handles variations correctly by ID)
+                $stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ? AND user_id = ?");
+                $stmt->bind_param("iii", $new_qty, $cart_id, $user_id);
+            }
             $stmt->execute();
             $stmt->close();
-        }
-    } else {
-        // --- LOGIC FOR GUEST: Update Session ---
-        foreach ($_POST['qty'] as $key => $new_qty) {
-            $new_qty = max(1, (int)$new_qty);
-            if (isset($_SESSION['cart'][$key])) {
+
+        } else {
+            // --- LOGIC FOR GUEST ---
+            // The $key is 'product_id-size-color'
+            if ($new_qty <= 0) {
+                unset($_SESSION['cart'][$key]);
+            } elseif (isset($_SESSION['cart'][$key])) {
                 $_SESSION['cart'][$key]['qty'] = $new_qty;
             }
         }
     }
 
-    $_SESSION['cart_success'] = "Cart quantities updated successfully.";
+    $_SESSION['cart_success'] = "Cart updated successfully.";
 }
 
 // Always redirect back to the cart page

@@ -10,8 +10,8 @@ if (empty($_SESSION['loggedin']) || !empty($_SESSION['is_admin'])) {
 $user_id = $_SESSION['id'];
 $cart_from_db = [];
 
-// 1. Fetch cart from DB
-$stmt = $conn->prepare("SELECT product_id, quantity FROM cart WHERE user_id = ?");
+// 1. FIXED: Fetch product_id, quantity, size, and color from DB
+$stmt = $conn->prepare("SELECT product_id, quantity, size, color FROM cart WHERE user_id = ?");
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -34,7 +34,6 @@ try {
     // 2. Extract product IDs safely
     $product_ids = array_unique(array_column($cart_from_db, 'product_id'));
     
-    // Check if we actually have IDs to prevent "IN ()" syntax error
     if (empty($product_ids)) {
         throw new Exception("No products found in your cart.");
     }
@@ -53,7 +52,7 @@ try {
         $product_map[$p['id']] = $p;
     }
 
-    // 3. Match DB items with Product Details
+    // 3. FIXED: Match DB items with Product Details, including size and color
     foreach ($cart_from_db as $item) {
         $pid = $item['product_id'];
         if (isset($product_map[$pid])) {
@@ -63,8 +62,8 @@ try {
             $final_items[] = [
                 'id'       => $pid,
                 'name'     => $product['name'],
-                'size'     => 'default', // Add logic here if your cart table supports sizes
-                'color'    => 'default', // Add logic here if your cart table supports colors
+                'size'     => $item['size'],  // Pulled from cart table
+                'color'    => $item['color'], // Pulled from cart table
                 'price'    => (float)$product['price'],
                 'quantity' => $qty
             ];
@@ -88,6 +87,7 @@ try {
     $order_id = $stmt->insert_id;
     $stmt->close();
 
+    // 5. INSERT INTO order_items with correct size and color
     $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, size, color, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
     foreach ($final_items as $item) {
         $stmt->bind_param('iissid', $order_id, $item['id'], $item['size'], $item['color'], $item['quantity'], $item['price']);
@@ -95,6 +95,7 @@ try {
     }
     $stmt->close();
 
+    // Clear cart after order
     $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
@@ -132,7 +133,10 @@ include __DIR__ . '/header.php';
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <strong><?= htmlspecialchars($item['name']) ?></strong><br>
-                                <small class="text-muted">Qty: <?= $item['quantity'] ?> @ $<?= number_format($item['price'], 2) ?></small>
+                                <small class="text-muted">
+                                    Size: <?= htmlspecialchars($item['size']) ?>, Color: <?= htmlspecialchars($item['color']) ?><br>
+                                    Qty: <?= $item['quantity'] ?> @ $<?= number_format($item['price'], 2) ?>
+                                </small>
                             </div>
                             <span class="fw-bold">$<?= number_format($item['price'] * $item['quantity'], 2) ?></span>
                         </li>
