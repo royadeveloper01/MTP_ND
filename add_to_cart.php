@@ -7,17 +7,13 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
-
 // RECEIVE PRODUCT DATA
-$id = isset($_POST['product_id']) ? trim($_POST['product_id']) : null;
-$size = isset($_POST['size']) ? trim($_POST['size']) : 'default'; // Use 'default' if no size
-$color = isset($_POST['color']) ? trim($_POST['color']) : 'default'; // Use 'default' if no color
-$qty = 1; // Always add one at a time from the product page
+$id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : null;
+$size = isset($_POST['size']) ? trim($_POST['size']) : 'default';
+$color = isset($_POST['color']) ? trim($_POST['color']) : 'default';
+$qty = 1; 
 
-if (!$id || (isset($_POST['size']) && $size === '') || (isset($_POST['color']) && $color === '')) {
-    // Fallback redirect if no product ID, or if a size/color was required but not provided.
-    // This prevents adding items with an empty selection.
+if (!$id) {
     header('Location: ' . BASE_URL . '/index.php');
     exit;
 }
@@ -33,14 +29,50 @@ if ($stmt->get_result()->num_rows === 0) {
 }
 $stmt->close();
 
-// Create a unique key for the cart item based on product ID, size, and color
-$cart_key = $id . '-' . $size . '-' . $color;
+// --- LOGIC START: DATABASE VS SESSION ---
 
-// ADD to session cart
-if (!isset($_SESSION['cart'][$cart_key])) {
-    $_SESSION['cart'][$cart_key] = ['product_id' => $id, 'size' => $size, 'color' => $color, 'qty' => $qty];
+if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
+    // 1. LOGGED IN USER: Save directly to database
+    $user_id = $_SESSION['id'];
+
+    // Check if this specific product is already in the user's DB cart
+    $check_stmt = $conn->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?");
+    $check_stmt->bind_param("ii", $user_id, $id);
+    $check_stmt->execute();
+    $res = $check_stmt->get_result();
+
+    if ($row = $res->fetch_assoc()) {
+        // Update existing row
+        $new_qty = $row['quantity'] + $qty;
+        $update_stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
+        $update_stmt->bind_param("ii", $new_qty, $row['id']);
+        $update_stmt->execute();
+        $update_stmt->close();
+    } else {
+        // Insert new row
+        $insert_stmt = $conn->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)");
+        $insert_stmt->bind_param("iii", $user_id, $id, $qty);
+        $insert_stmt->execute();
+        $insert_stmt->close();
+    }
+    $check_stmt->close();
+
 } else {
-    $_SESSION['cart'][$cart_key]['qty'] += $qty;
+    // 2. GUEST USER: Save to session cart (your original logic)
+    if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
+    
+    $cart_key = $id . '-' . $size . '-' . $color;
+
+    if (!isset($_SESSION['cart'][$cart_key])) {
+        $_SESSION['cart'][$cart_key] = [
+            'product_id' => $id, 
+            'size' => $size, 
+            'color' => $color, 
+            'qty' => $qty
+        ];
+    } else {
+        $_SESSION['cart'][$cart_key]['qty'] += $qty;
+    }
 }
 
 // REDIRECT TO CART PAGE

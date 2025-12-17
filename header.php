@@ -1,11 +1,9 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-// Calculate cart item count for badge (works for guests AND logged-in users)
+// Calculate cart item count
 $cart_count = 0;
-
 if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
-    // 1. If logged in, fetch the total count from the database
     try {
         $user_id = (int)$_SESSION['id'];
         $stmt = $conn->prepare("SELECT SUM(quantity) as total_qty FROM cart WHERE user_id = ?");
@@ -16,11 +14,9 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
         $cart_count = $row['total_qty'] ?? 0;
         $stmt->close();
     } catch (Exception $e) {
-        // Fallback to 0 if there is a DB error
         $cart_count = 0;
     }
 } else {
-    // 2. If guest, calculate from session as you did before
     if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
         foreach ($_SESSION['cart'] as $item) {
             $cart_count += $item['qty'] ?? 1;
@@ -28,16 +24,12 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
     }
 }
 
-// Determine current page
 $current_page = basename($_SERVER['PHP_SELF']);
-
-// Page-specific CSS mapping (scalable & maintainable)
 $page_css_map = [
     'dashboard.php' => 'dashboard.css',
     'index.php'     => 'shop.css',
     'cart.php'      => 'cart.css',
 ];
-
 $admin_pages = ['list.php', 'add.php', 'edit.php'];
 ?>
 <!doctype html>
@@ -53,10 +45,6 @@ $admin_pages = ['list.php', 'add.php', 'edit.php'];
 
     <?php if (isset($page_css_map[$current_page])): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>">
-    <?php endif; ?>
-
-    <?php if (in_array($current_page, $admin_pages)): ?>
-        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
     <?php endif; ?>
 </head>
 <body>
@@ -76,12 +64,6 @@ $admin_pages = ['list.php', 'add.php', 'edit.php'];
         <li class="nav-item">
           <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
         </li>
-
-        <?php if (!empty($_SESSION['is_admin'])): ?>
-            <li class="nav-item">
-              <a class="nav-link" href="<?= BASE_URL ?>/products/list.php">Manage Products</a>
-            </li>
-        <?php endif; ?>
 
         <?php if (empty($_SESSION['is_admin'])): ?>
             <li class="nav-item position-relative">
