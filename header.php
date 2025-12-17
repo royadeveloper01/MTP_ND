@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+<<<<<<< HEAD
 // Calculate cart item count
 $cart_count = 0;
 if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
@@ -29,6 +30,18 @@ $page_css_map = [
     'index.php'     => 'shop.css',
     'cart.php'      => 'cart.css',
 ];
+=======
+// Calculate cart item count for badge
+$cart_count = 0;
+if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+    foreach ($_SESSION['cart'] as $item) {
+        $cart_count += $item['qty'] ?? 1;
+    }
+}
+
+// Determine current page for page-specific CSS
+$current_page = basename($_SERVER['PHP_SELF']);
+>>>>>>> 21db651 (cart now has option to go back to shopping and delete the manage product on top right in admin, change shop on top right to cart)
 ?>
 <!doctype html>
 <html lang="en">
@@ -41,8 +54,23 @@ $page_css_map = [
     
     <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
 
+<<<<<<< HEAD
     <?php if (isset($page_css_map[$current_page])): ?>
         <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>">
+=======
+    <!-- Page-specific CSS (fixed as requested) -->
+    <?php if ($current_page === 'dashboard.php'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/dashboard.css">
+    <?php endif; ?>
+    <?php if ($current_page === 'index.php'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/shop.css">
+    <?php endif; ?>
+    <?php if ($current_page === 'cart.php'): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/cart.css">
+    <?php endif; ?>
+    <?php if (strpos($current_page, 'list.php') !== false || strpos($current_page, 'add.php') !== false || strpos($current_page, 'edit.php') !== false): ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
+>>>>>>> 21db651 (cart now has option to go back to shopping and delete the manage product on top right in admin, change shop on top right to cart)
     <?php endif; ?>
 </head>
 <body>
