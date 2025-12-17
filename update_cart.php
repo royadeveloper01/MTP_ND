@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qty'])) {
     }
 
     // Only set success message if no error occurred
-    if (!$has_error && $is_logged_in) {
+    if (!$has_error) {
         // For guests, we can always assume success since it's just session manipulation
         $_SESSION['cart_success'] = "Cart quantities updated successfully.";
     }

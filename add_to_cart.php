@@ -45,10 +45,14 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
             VALUES (?, ?, ?, ?, ?) 
             ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)";
             
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iissi", $user_id, $id, $size, $color, $qty);
-    $stmt->execute();
-    $stmt->close();
+    try {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iissi", $user_id, $id, $size, $color, $qty);
+        $stmt->execute();
+        $stmt->close();
+    } catch (Exception $e) {
+        error_log("Add to cart DB Error: " . $e->getMessage());
+    }
 
 } else {
     // 2. GUEST USER: Save to session cart
