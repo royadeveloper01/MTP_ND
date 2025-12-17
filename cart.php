@@ -8,11 +8,13 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
-// Success message handling
+// Success and error message handling
 $cart_success_message = $_SESSION['cart_success'] ?? '';
 unset($_SESSION['cart_success']);
 
-$cart_error_message = '';
+$cart_error_message = $_SESSION['cart_error'] ?? '';
+unset($_SESSION['cart_error']);
+
 $cart_items = [];
 $total = 0;
 
@@ -102,8 +104,9 @@ try {
     <?php endif; ?>
 
     <?php if (!empty($cart_error_message)): ?>
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill"></i> <?= htmlspecialchars($cart_error_message) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php elseif (!empty($cart_items)): ?>
         <form method="POST" action="<?= BASE_URL ?>/update_cart.php">
@@ -127,9 +130,7 @@ try {
                                 <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
                                 <td>
                                     <?php if (!empty($item['image'])): ?>
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" 
-     alt="<?= htmlspecialchars($item['name']) ?>" 
-     class="img-thumbnail cart-product-image">
+                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-product-image">
                                     <?php else: ?>
                                         <div class="text-muted small">No Image</div>
                                     <?php endif; ?>
@@ -138,11 +139,7 @@ try {
                                 <td><?= htmlspecialchars($item['size']) ?></td>
                                 <td><?= htmlspecialchars($item['color']) ?></td>
                                 <td>
-                                    <input type="number" 
-                                           name="qty[<?= htmlspecialchars((string)$item['cart_key']) ?>]" 
-                                           value="<?= htmlspecialchars((string)$item['quantity']) ?>" 
-                                           min="0" 
-                                           class="form-control w-75">
+                                    <input type="number" name="qty[<?= htmlspecialchars((string)$item['cart_key']) ?>]" value="<?= htmlspecialchars((string)$item['quantity']) ?>" min="0" class="form-control w-75">
                                 </td>
                                 <td><strong>$<?= number_format($item['subtotal'], 2) ?></strong></td>
                                 <td>

@@ -16,13 +16,17 @@ if ($key) {
             
             $_SESSION['cart_success'] = "Item removed from your cart.";
         } catch (Exception $e) {
-            error_log("Error removing from DB cart: " . $e->getMessage());
+            error_log("Error removing from DB cart (key: {$key}, user_id: {$user_id}): " . $e->getMessage());
+            $_SESSION['cart_error'] = "Could not remove the item from your cart. Please try again.";
         }
     } else {
         // 2. GUEST USER: Remove from session
         if (isset($_SESSION['cart'][$key])) {
             unset($_SESSION['cart'][$key]);
             $_SESSION['cart_success'] = "Item removed from your cart.";
+        } else {
+            // Optional: if key not found for guest, still provide feedback
+            $_SESSION['cart_error'] = "Item not found in your cart.";
         }
     }
 }

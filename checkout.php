@@ -103,8 +103,14 @@ try {
     $is_in_transaction = false;
 
 } catch (Exception $e) {
-    if ($is_in_transaction) $conn->rollback();
-    $error = "Process Error: " . $e->getMessage();
+    if ($is_in_transaction) {
+        $conn->rollback();
+    }
+    // Log the real error for debugging (visible in server logs)
+    error_log("Checkout failed for user {$user_id}: " . $e->getMessage() . " | Trace: " . $e->getTraceAsString());
+    
+    // Show only a generic, user-friendly message (no sensitive details leaked)
+    $error = "We could not process your order at this time. Please try again later or contact support.";
 }
 
 include __DIR__ . '/header.php';
