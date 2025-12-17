@@ -19,8 +19,7 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
 } else {
     if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
         foreach ($_SESSION['cart'] as $item) {
-            $cart_count += $item['qty'] ?? 1;
-        }
+            $cart_count += $item['qty'] ?? 0;        }
     }
 }
 

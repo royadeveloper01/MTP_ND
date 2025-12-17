@@ -171,8 +171,7 @@ try {
         </form>
     <?php else: ?>
         <div class="text-center py-5">
-            <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
-            <h3 class="mt-3 text-muted">Your cart is empty</h3>
+      <i class="bi bi-cart-x text-muted empty-cart-icon"></i>            <h3 class="mt-3 text-muted">Your cart is empty</h3>
             <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary btn-lg mt-3">Start Shopping</a>
         </div>
     <?php endif; ?>
