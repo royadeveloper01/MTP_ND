@@ -137,7 +137,7 @@ try {
                                 <td><strong><?= htmlspecialchars($item['name']) ?></strong></td>
                                 <td>
                                     <?php if (!empty($item['image'])): ?>
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image" style="width: 80px;">
+                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="img-thumbnail cart-item-image">
                                     <?php else: ?>
                                         <div class="cart-item-placeholder">No Image</div>
                                     <?php endif; ?>

@@ -125,7 +125,7 @@ include __DIR__ . '/header.php';
             <p class="lead">Thank you for your purchase. Your order number is <strong>#<?= (int)$order_id ?></strong>.</p>
         </div>
 
-        <div class="card shadow-sm mx-auto" style="max-width: 700px;">
+        <div class="card shadow-sm mx-auto checkout-summary-card">
             <div class="card-header bg-primary text-white">Order Summary</div>
             <div class="card-body">
                 <ul class="list-group list-group-flush mb-3">
