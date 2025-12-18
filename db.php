@@ -43,18 +43,26 @@ if (!defined('BASE_URL')) {
 // Detect environment prefix based on HTTP_HOST
 $env_prefix = (isset($_SERVER['HTTP_HOST']) && in_array($_SERVER['HTTP_HOST'], $local_hosts)) ? 'LOCAL_' : 'LIVE_';
 
+// Helper to find env vars in shared hosting environments
+$get_env = function($key) {
+    $val = getenv($key);
+    if ($val === false && isset($_ENV[$key])) $val = $_ENV[$key];
+    if ($val === false && isset($_SERVER[$key])) $val = $_SERVER[$key];
+    return $val;
+};
+
 // Fetch variables with prefix, fallback to standard names if prefixed ones are missing
-$host = getenv($env_prefix . 'DB_HOST');
-if ($host === false) $host = getenv('DB_HOST');
+$host = $get_env($env_prefix . 'DB_HOST');
+if ($host === false) $host = $get_env('DB_HOST');
 
-$user = getenv($env_prefix . 'DB_USER');
-if ($user === false) $user = getenv('DB_USER');
+$user = $get_env($env_prefix . 'DB_USER');
+if ($user === false) $user = $get_env('DB_USER');
 
-$pass = getenv($env_prefix . 'DB_PASS');
-if ($pass === false) $pass = getenv('DB_PASS');
+$pass = $get_env($env_prefix . 'DB_PASS');
+if ($pass === false) $pass = $get_env('DB_PASS');
 
-$db = getenv($env_prefix . 'DB_NAME');
-if ($db === false) $db = getenv('DB_NAME');
+$db = $get_env($env_prefix . 'DB_NAME');
+if ($db === false) $db = $get_env('DB_NAME');
 
 // --- Start session safely and force session-only cookie ---
 if (session_status() === PHP_SESSION_NONE) {
@@ -75,10 +83,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // --- Database connection ---
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn) {
+try {
+    $conn = new mysqli($host, $user, $pass, $db);
     $conn->set_charset('utf8mb4');
-}
-if ($conn->connect_error) {
-    die("Connection failed: " . htmlspecialchars($conn->connect_error));
+} catch (Exception $e) {
+    // Display error to help debug connection issues on InfinityFree
+    die("<h3>Database Connection Failed</h3><p>Error: " . $e->getMessage() . "</p><p>Attempted Host: $host <br> Attempted User: $user</p>");
 }
