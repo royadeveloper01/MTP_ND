@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/../db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qty'])) {
     $is_logged_in = !empty($_SESSION['loggedin']) && !empty($_SESSION['id']);
@@ -59,5 +59,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['qty'])) {
 }
 
 // Redirect back to the cart
-header("Location: " . BASE_URL . "/cart.php");
+header("Location: " . BASE_URL . "/cart/cart.php");
 exit;

@@ -22,7 +22,7 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 
 if (empty($cart_from_db)) {
-    header('Location: ' . BASE_URL . '/cart.php');
+    header('Location: ' . BASE_URL . '/cart/cart.php');
     exit;
 }
 
@@ -121,7 +121,7 @@ include __DIR__ . '/header.php';
         <div class="alert alert-danger text-center">
             <h1><i class="bi bi-x-circle"></i> Order Failed</h1>
             <p><?= htmlspecialchars($error) ?></p>
-            <a href="cart.php" class="btn btn-secondary">Return to Cart</a>
+            <a href="<?= BASE_URL ?>/cart/cart.php" class="btn btn-secondary">Return to Cart</a>
         </div>
     <?php else: ?>
         <div class="text-center mb-5">
