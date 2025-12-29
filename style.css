@@ -368,13 +368,7 @@ a:hover {
 body {
     background: none;
 }
-.form-container {
-    position: relative;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.85); 
-    padding: 30px;
-    border-radius: 10px;
-}
+
 .form-container {
     position: relative;
     z-index: 10;
@@ -397,4 +391,8 @@ body {
 .women-products img {
     height: 360px;
     object-fit: cover;
+}
+
+.main-navbar {
+  background-color: #0a437cff;
 }
