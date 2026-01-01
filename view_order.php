@@ -92,7 +92,7 @@ include __DIR__ . '/header.php';
         <div class="card mb-4">
             <div class="card-header">Update Order Status</div>
             <div class="card-body">
-                <form action="admin/update_order_status.php" method="POST">
+                <form action="update_order_status.php" method="POST">
                     <input type="hidden" name="order_id" value="<?= (int)$order_id ?>">
                     <div class="input-group">
                         <select name="status" class="form-select">
