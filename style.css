@@ -1,354 +1,268 @@
-/* === Google Font Import === */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+/* === Google Font: Plus Jakarta Sans === */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-/* === CSS Variables for Easy Themeing === */
 :root {
-    --primary-color: #35424a;
-    --secondary-color: #e8491d;
-    --light-bg: #f8f9fa;
-    --dark-text: #333;
-    --light-text: #fff;
-    --border-color: #dee2e6;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --border-radius: 8px;
+    --primary: #0f172a;       /* Deep Navy - Xanh đêm sang trọng */
+    --accent: #b45309;        /* Amber Gold - Vàng hổ phách */
+    --accent-soft: rgba(180, 83, 9, 0.1);
+    --bg-main: #fcfcfd;       /* Off-white porcelain */
+    --bg-card: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --nav-height: 95px;       /* Header to và bề thế hơn */
+    --transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.03);
+    --shadow-hover: 0 30px 60px rgba(15, 23, 42, 0.12);
 }
 
-/* === General Body & Typography Styles === */
+/* === Reset & Base === */
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     margin: 0;
-    padding: 0;
-    background-color: var(--light-bg);
-    color: var(--dark-text);
-    line-height: 1.6;
+    padding-top: var(--nav-height);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    margin-top: 0;
-}
-
-a {
-    color: var(--secondary-color);
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-/* === Main Container === */
-.container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-}
-
-/* === Navbar Styling === */
+/* === NAVBAR: Vừa vặn & Sang trọng === */
 .navbar {
-    background-color: var(--primary-color);
-    color: var(--light-text);
-    padding: 15px 5%;
+    height: var(--nav-height);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 0 10%; /* Tăng padding để dồn nội dung vào giữa vừa vặn hơn */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.02);
 }
+
 .navbar .logo {
-    font-size: 1.8em;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 1.7rem; /* Logo to rõ ràng hơn */
+    letter-spacing: -1.5px;
+    color: var(--primary) !important;
+    text-decoration: none;
 }
+
+.navbar .logo::after {
+    content: '.';
+    color: var(--accent);
+}
+
 .navbar a {
-    color: var(--light-text);
-    text-decoration: none;
-    padding: 8px 18px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-.navbar a:hover {
-    background-color: #576a75;
-    text-decoration: none;
-}
-
-/* === Hero Section (Homepage) === */
-.hero {
-    background: var(--primary-color);
-    color: var(--light-text);
-    padding: 80px 20px;
-    text-align: center;
-    margin-bottom: 40px;
-}
-.hero h1 {
-    margin: 0;
-    font-size: 3.5em;
+    color: var(--text-main) !important;
     font-weight: 700;
+    font-size: 1rem;
+    transition: var(--transition);
+    padding: 12px 24px;
+    text-decoration: none;
 }
 
-/* === New Hero Section Styles === */
-body.home-page {
-    background-color: #f5f7fb;
+.navbar a:hover {
+    color: var(--accent) !important;
+    background: rgba(15, 23, 42, 0.04);
+    border-radius: 14px;
 }
 
+/* === HERO SECTION: Modern Minimalist === */
 .hero-section {
+    padding: 120px 10% 100px 10%;
+    background: var(--primary);
     position: relative;
+    border-radius: 0 0 80px 80px;
+    margin-bottom: 5rem;
     overflow: hidden;
-    padding: 3rem 1rem 2rem 1rem;
-    background: linear-gradient(135deg, #0d6efd, #6610f2);
-    color: #fff;
-    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+    opacity: 0.15;
+    filter: blur(80px);
 }
 
 .hero-inner {
-    max-width: 1140px;
+    max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
-    gap: 2rem;
+    gap: 4rem;
 }
 
 .hero-text {
-    flex: 1 1 260px;
-    z-index: 1;
-}
-
-.hero-text h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.hero-text p {
-    font-size: 1rem;
-    opacity: 0.9;
-    margin-bottom: 1rem;
-}
-
-.hero-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1.3rem;
-    border-radius: 999px;
-    background-color: #fff;
-    color: #0d6efd;
-    font-weight: 600;
-    text-decoration: none;
-    font-size: 0.95rem;
-}
-
-.hero-cta:hover {
-    background-color: #f1f5ff;
-    text-decoration: none;
+    flex: 1.2;
+    z-index: 2;
 }
 
 .hero-badge {
-    display: inline-block;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.7rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    margin-bottom: 0.6rem;
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2rem;
+}
+
+.hero-text h1 {
+    font-size: 4.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -3px;
+    margin-bottom: 1.5rem;
 }
 
 .hero-highlight {
-    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    font-size: 1.1rem;
+    display: block;
+}
+
+.hero-cta {
+    margin-top: 3rem;
+    background: var(--accent);
+    color: white !important;
+    padding: 20px 45px;
+    border-radius: 20px;
+    font-weight: 800;
+    display: inline-flex;
+    text-decoration: none;
+    box-shadow: 0 25px 50px -12px rgba(180, 83, 9, 0.4);
+    transition: var(--transition);
+}
+
+.hero-cta:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 35px 60px -12px rgba(180, 83, 9, 0.5);
 }
 
 .hero-graphic {
-    flex: 0 1 260px;
-    min-width: 230px;
-    max-width: 320px;
-    height: 180px;
-    border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.25);
+    flex: 0.8;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    height: 320px;
+    border-radius: 40px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    text-align: center;
+    padding: 40px;
+    color: rgba(255,255,255,0.7);
 }
 
-.hero-graphic span {
-    max-width: 80%;
-    line-height: 1.4;
-}
-
-/* === Product Grid (Homepage) === */
-.products-wrapper {
-    max-width: 1140px;
-    margin: 0 auto 2.5rem auto;
-    padding: 0 1rem;
-}
-
+/* === CATEGORY NAVIGATION === */
 .category-nav {
     display: flex;
     justify-content: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 4rem;
 }
 
 .category-pill {
-    padding: 0.45rem 1.1rem;
-    border-radius: 999px;
-    border: 1px solid #d0d7e2;
-    background-color: #ffffff;
-    font-size: 0.9rem;
+    padding: 14px 35px;
+    border-radius: 20px;
+    font-weight: 700;
+    background: white;
+    color: var(--text-muted);
+    border: 1px solid #f1f5f9;
     text-decoration: none;
-    color: #333;
-    transition: all 0.15s ease;
-}
-
-.category-pill:hover {
-    border-color: #0d6efd;
-    color: #0d6efd;
-    text-decoration: none;
+    transition: var(--transition);
 }
 
 .category-pill.active {
-    background-color: #0d6efd;
-    color: #ffffff;
-    border-color: #0d6efd;
-    font-weight: 600;
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
 }
 
+/* === PRODUCT CARD === */
+.products-grid {
+    gap: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    padding: 0 10%;
+}
+
+.product-card {
+    background: var(--bg-card);
+    border-radius: 40px;
+    padding: 18px;
+    border: 1px solid #f1f5f9;
+    transition: var(--transition);
+}
+
+.product-card:hover {
+    transform: translateY(-15px);
+    box-shadow: var(--shadow-hover);
+}
+
+.product-card img {
+    border-radius: 32px;
+    height: 380px;
+    width: 100%;
+    object-fit: cover;
+    margin-bottom: 24px;
+}
+
+.product-card h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.product-card .price {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border-radius: 22px;
+    padding: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    width: 100%;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background: var(--accent);
+    transform: scale(0.97);
+}
+
+/* === SECTION TITLES === */
 .section-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-top: 0.8rem;
-    margin-bottom: 0.8rem;
-    border-bottom: 2px solid #e5e7eb;
-    padding-bottom: 0.5rem;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 3rem;
+    padding: 0 10%;
 }
 
 .section-title span {
-    font-size: 0.8rem;
-    color: #6c757d;
-    font-weight: 400;
-    margin-left: 0.35rem;
-}
-
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 1.1rem;
-}
-.product-card {
-    background-color: #ffffff;
-    border-radius: 1rem;
-    padding: 0.9rem;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-.product-card img {
-    border-radius: 0.8rem;
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    margin-bottom: 0.6rem;
-}
-.product-card h3 {
+    color: var(--text-muted);
     font-size: 1rem;
-    margin-bottom: 0.2rem;
+    font-weight: 500;
 }
-.product-card .price {
-    font-weight: 700;
-    margin-bottom: 0.3rem;
-    color: #0d6efd;
-}
-.product-card p {
-    font-size: 0.85rem;
-    color: #6c757d;
-    flex: 1;
-}
-.product-card form {
-    margin-top: 0.4rem;
-}
-
-/* === Form Styling (Login, Register, Add, Edit) === */
-.form-container {
-    width: 100%;
-    max-width: 500px;
-    margin: 50px auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-}
-.form-container h2 {
-    text-align: center;
-    margin-bottom: 25px;
-}
-.form-control {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    font-size: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    box-sizing: border-box; /* Important for padding */
-}
-
-/* === Button Styling === */
-.btn {
-    display: inline-block;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-    text-align: center;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    width: 100%;
-    margin-bottom: 10px;
-    box-sizing: border-box;
-}
-.btn:hover {
-    transform: translateY(-2px);
-    text-decoration: none;
-}
-.btn-primary { background-color: var(--primary-color); color: var(--light-text); }
-.btn-success { background-color: var(--success-color); color: var(--light-text); }
-.btn-danger { background-color: var(--danger-color); color: var(--light-text); }
-.btn-warning { background-color: var(--warning-color); color: var(--dark-text); }
-.btn-default { background-color: var(--border-color); color: var(--dark-text); border: 1px solid #ccc; }
-
-/* === Alert / Message Styling === */
-.message, .alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    text-align: center;
-}
-.alert-success { background-color: #d4edda; color: #155724; }
-.alert-danger, .message { background-color: #f8d7da; color: #721c24; }
-
-/* === Table Styling (list.php) === */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 25px;
-}
-.table th, .table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-.table thead th {
-    background-color: var(--primary-color);
-    color: var(--light-text);
-}
-.table tbody tr:nth-child(even) { background-color: var(--light-bg); }
-.table .btn { width: auto; padding: 5px 10px; font-size: 0.9em; }
