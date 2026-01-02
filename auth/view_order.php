@@ -5,7 +5,7 @@ if (file_exists(dirname(__DIR__) . '/config.php')) {
 }
 if (!defined('BASE_URL')) define('BASE_URL', '/MTP_ND');
 
-require_once __DIR__ . '/auth/auth.php';
+require_once __DIR__ . '/auth.php';
 
 // Admins only
 if (empty($_SESSION['loggedin']) || empty($_SESSION['is_admin'])) {
@@ -99,11 +99,9 @@ include dirname(__DIR__) . '/header.php';
                             <div class="d-flex align-items-center">
                                 <?php if (!empty($item['image'])): ?>
                                     <img src="<?= BASE_URL . '/' . htmlspecialchars($item['image']) ?>"
-                                         class="rounded"
-                                         style="width:60px;height:60px;object-fit:cover;margin-right:15px;">
+                                         class="rounded order-item-img">
                                 <?php else: ?>
-                                    <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center"
-                                         style="width:60px;height:60px;margin-right:15px;">No Img</div>
+                                    <div class="bg-secondary text-white rounded d-flex align-items-center justify-content-center order-item-img">No Img</div>
                                 <?php endif; ?>
                                 <div>
                                     <h6 class="mb-1"><?= htmlspecialchars($item['name'] ?? 'Unknown Product') ?></h6>

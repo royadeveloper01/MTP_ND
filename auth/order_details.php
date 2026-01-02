@@ -1,11 +1,10 @@
 <?php
 // order_details.php
 // Load config to ensure BASE_URL is available
-if (file_exists(__DIR__ . '/config.php')) require_once __DIR__ . '/config.php';
-if (!defined('BASE_URL')) define('BASE_URL', '/MTP_ND');
+require_once dirname(__DIR__) . '/config.php';
 
 // Include auth.php for session start and DB connection
-require_once __DIR__ . '/auth/auth.php';
+require_once __DIR__ . '/auth.php';
 
 // Enforce login
 if (empty($_SESSION['loggedin'])) {

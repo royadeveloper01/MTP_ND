@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth/auth.php';
 
 // Admins only
@@ -19,7 +20,7 @@ $order_statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
 $error = '';
 
 if (!$order_id) {
-    header('Location: orders.php');
+    header("Location: " . BASE_URL . "/auth/orders.php");
     exit;
 }
 
@@ -38,7 +39,7 @@ try {
 
     if (!$order) {
         // If order doesn't exist, redirect back to the list
-        header('Location: orders.php');
+        header("Location: " . BASE_URL . "/auth/orders.php");
         exit;
     }
 

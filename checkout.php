@@ -1,6 +1,7 @@
 <?php
-// auth.php already includes db.php and starts the session/remember-me logic
-require_once __DIR__ . '/auth/auth.php'; 
+require_once __DIR__ . '/config.php';
+
+require_once __DIR__ . '/auth/auth.php';
 
 // User must be logged in and not an admin
 if (empty($_SESSION['loggedin']) || !empty($_SESSION['is_admin'])) {
