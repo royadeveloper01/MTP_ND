@@ -266,3 +266,11 @@ body {
     font-size: 1rem;
     font-weight: 500;
 }
+
+/* === Order Details === */
+.order-item-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    margin-right: 15px;
+}

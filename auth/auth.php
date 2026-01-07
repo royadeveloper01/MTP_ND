@@ -42,6 +42,14 @@ if (!isset($_SESSION['loggedin']) && isset($_COOKIE['rememberme'])) {
     }
 }
 
+// helper: require login
+function require_login() {
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        header("Location: " . BASE_URL . "/auth/login.php");
+        exit;
+    }
+}
+
 // helper: require admin
 function require_admin() {
     if (!isset($_SESSION['loggedin'])) {
