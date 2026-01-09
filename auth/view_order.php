@@ -1,17 +1,11 @@
 <?php
 // view_order.php
-if (file_exists(dirname(__DIR__) . '/config.php')) {
-    require_once dirname(__DIR__) . '/config.php';
-}
-if (!defined('BASE_URL')) define('BASE_URL', '/MTP_ND');
+require_once dirname(__DIR__) . '/config.php';
 
 require_once __DIR__ . '/auth.php';
 
 // Admins only
-if (empty($_SESSION['loggedin']) || empty($_SESSION['is_admin'])) {
-    header('Location: ' . BASE_URL . '/auth/login.php');
-    exit;
-}
+require_admin();
 
 $order_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $message = '';

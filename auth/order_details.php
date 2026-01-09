@@ -7,17 +7,14 @@ require_once dirname(__DIR__) . '/config.php';
 require_once __DIR__ . '/auth.php';
 
 // Enforce login
-if (empty($_SESSION['loggedin'])) {
-    header("Location: " . BASE_URL . "/auth/login.php");
-    exit;
-}
+require_login();
 
 $order_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $user_id = $_SESSION['id'];
 
 // Redirect if invalid ID
 if ($order_id <= 0) {
-    header("Location: orders.php");
+    header("Location: " . BASE_URL . "/auth/orders.php");
     exit;
 }
 
@@ -68,11 +65,11 @@ if ($order) {
 <div class="py-3">
     <?php if (!$order): ?>
         <div class="alert alert-danger">Order not found or you do not have permission to view it.</div>
-        <a href="orders.php" class="btn btn-secondary">Back to Orders</a>
+        <a href="<?= BASE_URL ?>/auth/orders.php" class="btn btn-secondary">Back to Orders</a>
     <?php else: ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Order #<?= htmlspecialchars($order['id']) ?></h2>
-            <a href="orders.php" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
+            <a href="<?= BASE_URL ?>/auth/orders.php" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
         </div>
 
         <div class="card mb-4 shadow-sm">

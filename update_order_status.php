@@ -11,10 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Admins only
-if (empty($_SESSION['loggedin']) || empty($_SESSION['is_admin'])) {
-    header('Location: ' . BASE_URL . '/auth/login.php');
-    exit;
-}
+require_admin();
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +51,7 @@ try {
     $stmt->close();
 
 } catch (Throwable $e) {
+    error_log('Order status update failed: ' . $e->getMessage());
     $_SESSION['error_message'] = 'Database error occurred.';
 }
 
