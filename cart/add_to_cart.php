@@ -7,6 +7,8 @@ if (!empty($_SESSION['is_admin'])) {
     exit;
 }
 
+if (!isset($_SESSION['cart'])) $_SESSION['cart'] = array();
+
 // RECEIVE PRODUCT DATA
 $id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : null;
 // Trim to remove accidental whitespace

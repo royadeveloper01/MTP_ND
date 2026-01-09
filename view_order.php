@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth/auth.php';
 
 // Admins only
@@ -19,7 +20,7 @@ $order_statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
 $error = '';
 
 if (!$order_id) {
-    header('Location: orders.php');
+    header("Location: " . BASE_URL . "/auth/orders.php");
     exit;
 }
 
@@ -38,7 +39,7 @@ try {
 
     if (!$order) {
         // If order doesn't exist, redirect back to the list
-        header('Location: orders.php');
+        header("Location: " . BASE_URL . "/auth/orders.php");
         exit;
     }
 
@@ -92,7 +93,7 @@ include __DIR__ . '/header.php';
         <div class="card mb-4">
             <div class="card-header">Update Order Status</div>
             <div class="card-body">
-                <form action="admin/update_order_status.php" method="POST">
+                <form action="update_order_status.php" method="POST">
                     <input type="hidden" name="order_id" value="<?= (int)$order_id ?>">
                     <div class="input-group">
                         <select name="status" class="form-select">
