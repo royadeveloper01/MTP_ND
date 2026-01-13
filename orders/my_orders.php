@@ -1,11 +1,11 @@
 <?php
-// orders.php
+// orders/my_orders.php - User's order list
 // Load config to ensure BASE_URL is available
-if (file_exists(dirname(__DIR__) . '/config.php')) require_once dirname(__DIR__) . '/config.php';
+if (file_exists(__DIR__ . '/../config.php')) require_once __DIR__ . '/../config.php';
 if (!defined('BASE_URL')) define('BASE_URL', '/MTP_ND');
 
 // Include auth.php for session start, DB connection, and auto-login check
-require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/../auth/auth.php';
 
 // Enforce login: Redirect to login if not logged in
 if (empty($_SESSION['loggedin'])) {
@@ -30,7 +30,7 @@ if ($stmt = $conn->prepare($sql)) {
     $stmt->close();
 }
 ?>
-<?php include dirname(__DIR__) . '/header.php'; ?>
+<?php include __DIR__ . '/../header.php'; ?>
 
 <div class="container" style="padding: 20px;">
     <h2>My Orders</h2>
@@ -59,7 +59,7 @@ if ($stmt = $conn->prepare($sql)) {
                         </td>
                         <td>$<?= number_format($order['total_amount'], 2) ?></td>
                         <td>
-                            <a href="view_order.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-primary">View</a>
+                            <a href="<?= BASE_URL ?>/orders/details.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-primary">View</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -68,4 +68,4 @@ if ($stmt = $conn->prepare($sql)) {
     <?php endif; ?>
 </div>
 
-<?php include dirname(__DIR__) . '/footer.php'; ?>
+<?php include __DIR__ . '/../footer.php'; ?>

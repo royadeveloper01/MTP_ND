@@ -65,5 +65,56 @@
 <!-- Optional: Your custom JS file -->
 <script src="<?= defined('BASE_URL') ? BASE_URL : '' ?>/assets/js/main.js"></script>
 
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('addToCartForm', (config) => ({
+        productId: config.productId,
+        hasSizes: config.hasSizes,
+        hasColors: config.hasColors,
+        size: '',
+        color: '',
+        loading: false,
+        errorMessage: '',
+        feedbackMessage: '',
+        submit() {
+            this.errorMessage = '';
+            if (this.hasSizes && !this.size) {
+                this.errorMessage = 'Please select a size.';
+                return;
+            }
+            if (this.hasColors && !this.color) {
+                this.errorMessage = 'Please select a color.';
+                return;
+            }
+
+            this.loading = true;
+
+            const formData = new FormData();
+            formData.append('product_id', this.productId);
+            formData.append('quantity', 1);
+            formData.append('size', this.size || '');
+            formData.append('color', this.color || '');
+            formData.append('ajax', '1');
+
+            fetch(`${config.baseUrl}/cart/add_to_cart.php`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('cart-updated', { detail: { count: data.cart_count } }));
+                    this.feedbackMessage = 'Added!';
+                    setTimeout(() => this.feedbackMessage = '', 2000);
+                } else {
+                    this.errorMessage = data.message || 'Could not add to cart.';
+                }
+            })
+            .catch(() => this.errorMessage = 'An unexpected error occurred.')
+            .finally(() => this.loading = false);
+        }
+    }));
+});
+</script>
 </body>
 </html>

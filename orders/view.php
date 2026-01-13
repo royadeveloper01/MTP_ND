@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/auth/auth.php';
+// orders/view.php - Admin view order details
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/auth.php';
 
 // Admins only
 if (empty($_SESSION['is_admin'])) {
@@ -20,7 +21,7 @@ $order_statuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
 $error = '';
 
 if (!$order_id) {
-    header("Location: " . BASE_URL . "/auth/orders.php");
+    header("Location: " . BASE_URL . "/orders/index.php");
     exit;
 }
 
@@ -39,7 +40,7 @@ try {
 
     if (!$order) {
         // If order doesn't exist, redirect back to the list
-        header("Location: " . BASE_URL . "/auth/orders.php");
+        header("Location: " . BASE_URL . "/orders/index.php");
         exit;
     }
 
@@ -59,12 +60,12 @@ try {
     $error = "Database error: " . $e->getMessage();
 }
 
-include __DIR__ . '/header.php';
+include __DIR__ . '/../header.php';
 ?>
 
 <div class="container">
     <h1>Order Details #<?= (int)$order_id ?></h1>
-    <a href="orders.php" class="btn btn-secondary mb-4">Back to Order List</a>
+    <a href="<?= BASE_URL ?>/orders/index.php" class="btn btn-secondary mb-4">Back to Order List</a>
 
     <?php if ($success_message): ?>
         <div class="alert alert-success"><?= htmlspecialchars($success_message) ?></div>
@@ -93,7 +94,7 @@ include __DIR__ . '/header.php';
         <div class="card mb-4">
             <div class="card-header">Update Order Status</div>
             <div class="card-body">
-                <form action="update_order_status.php" method="POST">
+                <form action="<?= BASE_URL ?>/orders/update_status.php" method="POST">
                     <input type="hidden" name="order_id" value="<?= (int)$order_id ?>">
                     <div class="input-group">
                         <select name="status" class="form-select">
@@ -145,4 +146,4 @@ include __DIR__ . '/header.php';
     <?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/footer.php'; ?>
+<?php include __DIR__ . '/../footer.php'; ?>

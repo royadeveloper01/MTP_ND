@@ -40,12 +40,18 @@ function displayProductGrid($products) {
 
         // Only show 'Add to cart' button for non-admin users who are logged in
         if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
-            $output .= '<form method="post" action="cart/add_to_cart.php" class="mt-2">';
-            $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
+            $js_config = json_encode([
+                'productId' => (int)$p['id'],
+                'hasSizes' => !empty($sizes),
+                'hasColors' => !empty($colors),
+                'baseUrl' => BASE_URL
+            ]);
+
+            $output .= '<div x-data="addToCartForm(' . htmlspecialchars($js_config, ENT_QUOTES) . ')" class="mt-2">';
             if (!empty($sizes) || !empty($colors)) {
                 $output .= '<div class="input-group input-group-sm">';
                 if (!empty($sizes)) {
-                    $output .= '<select name="size" class="form-select" required>';
+                    $output .= '<select x-model="size" class="form-select" required>';
                     $output .= '<option value="">Size</option>';
                     foreach ($sizes as $size) {
                         $output .= '<option value="' . htmlspecialchars($size) . '">' . htmlspecialchars($size) . '</option>';
@@ -53,19 +59,24 @@ function displayProductGrid($products) {
                     $output .= '</select>';
                 }
                 if (!empty($colors)) {
-                    $output .= '<select name="color" class="form-select" required>';
+                    $output .= '<select x-model="color" class="form-select" required>';
                     $output .= '<option value="">Color</option>';
                     foreach ($colors as $color) {
                         $output .= '<option value="' . htmlspecialchars($color) . '">' . htmlspecialchars($color) . '</option>';
                     }
                     $output .= '</select>';
                 }
-                $output .= '<button type="submit" class="btn btn-primary">Add</button>';
+                $output .= '<button @click="submit" :disabled="loading" class="btn btn-primary" style="min-width: 60px;">';
+                $output .= '<span x-show="!loading && !feedbackMessage">Add</span>';
+                $output .= '<span x-show="loading" class="spinner-border spinner-border-sm" role="status"></span>';
+                $output .= '<span x-show="feedbackMessage" x-text="feedbackMessage"></span>';
+                $output .= '</button>';
                 $output .= '</div>';
             } else {
-                $output .= '<button type="submit" class="btn btn-sm btn-primary">Add to cart</button>';
+                $output .= '<button @click="submit" :disabled="loading" class="btn btn-sm btn-primary" style="min-width: 90px;"><span x-show="!loading && !feedbackMessage">Add to cart</span><span x-show="loading" class="spinner-border spinner-border-sm" role="status"></span><span x-show="feedbackMessage" x-text="feedbackMessage"></span></button>';
             }
-            $output .= '</form>';
+            $output .= '<div x-show="errorMessage" x-text="errorMessage" class="text-danger small mt-1" x-transition></div>';
+            $output .= '</div>';
         }
 
         $output .= '</div>';

@@ -62,12 +62,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($message): ?>
         <p class="alert-danger"><?=htmlspecialchars($message)?></p>
     <?php endif; ?>
-    <form method="post">
+    <form method="post" x-data="{ password: '', password_confirm: '' }">
         <input class="form-control" name="fname" placeholder="First name" required value="<?=htmlspecialchars($_POST['fname'] ?? '')?>">
         <input class="form-control" name="lname" placeholder="Last name" required value="<?=htmlspecialchars($_POST['lname'] ?? '')?>">
         <input class="form-control" name="email" type="email" placeholder="Email" required value="<?=htmlspecialchars($_POST['email'] ?? '')?>">
-        <input class="form-control" name="password" type="password" placeholder="Password" required>
-        <input class="form-control" name="password2" type="password" placeholder="Confirm Password" required>
+        
+        <input class="form-control" name="password" type="password" placeholder="Password" required x-model="password">
+        <input class="form-control" name="password2" type="password" placeholder="Confirm Password" required x-model="password_confirm">
+        
+        <!-- Alpine.js Validation Message -->
+        <div x-show="password !== '' && password_confirm !== '' && password !== password_confirm" 
+             style="color: #dc3545; font-size: 0.875em; margin-top: -10px; margin-bottom: 10px;"
+             x-transition>
+            Passwords do not match
+        </div>
+
         <input type="tel"  class="form-control" name="phone_number" placeholder="Phone Number" required value="<?=htmlspecialchars($_POST['phone_number'] ?? '')?>">
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
