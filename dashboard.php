@@ -163,7 +163,7 @@ $page_css = '/assets/css/dashboard.css';
                         <p class="stat-number"><?php echo $stats['cart_items']; ?></p>
                     </div>
                     <div>
-                        <a href="<?php echo BASE_URL; ?>/cart.php">View Cart →</a>
+                        <a href="<?php echo BASE_URL; ?>/cart/cart.php">View Cart →</a>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -191,7 +191,7 @@ $page_css = '/assets/css/dashboard.css';
                             <?php if (!$is_admin): ?>
                                 <li class="d-flex justify-content-between align-items-center">
                                     <span><i class="bi bi-cart4 me-2"></i>Shopping Cart</span>
-                                    <a href="<?php echo BASE_URL; ?>/cart.php" class="btn btn-sm btn-outline-secondary">View</a>
+                                    <a href="<?php echo BASE_URL; ?>/cart/cart.php" class="btn btn-sm btn-outline-secondary">View</a>
                                 </li>
                             <?php endif; ?>
                             <li class="d-flex justify-content-between align-items-center">

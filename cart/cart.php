@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/header.php';
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../header.php';
 
 // Admins should not see cart
 if (!empty($_SESSION['is_admin'])) {
@@ -109,7 +109,7 @@ try {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php elseif (!empty($cart_items)): ?>
-        <form method="POST" action="<?= BASE_URL ?>/update_cart.php">
+        <form method="POST" action="<?= BASE_URL ?>/cart/update_cart.php">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-dark">
@@ -149,7 +149,7 @@ try {
                                 </td>
                                 <td><strong>$<?= number_format($item['subtotal'], 2) ?></strong></td>
                                 <td>
-                                    <a href="<?= BASE_URL ?>/remove_from_cart.php?key=<?= urlencode($item['cart_key']) ?>" 
+                                    <a href="<?= BASE_URL ?>/cart/remove_from_cart.php?key=<?= urlencode($item['cart_key']) ?>" 
                                        class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash"></i>
                                     </a>
@@ -186,4 +186,4 @@ try {
     <?php endif; ?>
 </div>
 
-<?php require_once __DIR__ . '/footer.php'; ?>
+<?php require_once __DIR__ . '/../footer.php'; ?>

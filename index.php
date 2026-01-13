@@ -40,7 +40,7 @@ function displayProductGrid($products) {
 
         // Only show 'Add to cart' button for non-admin users who are logged in
         if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
-            $output .= '<form method="post" action="add_to_cart.php" class="mt-2">';
+            $output .= '<form method="post" action="cart/add_to_cart.php" class="mt-2">';
             $output .= '<input type="hidden" name="product_id" value="' . $pid . '">';
             if (!empty($sizes) || !empty($colors)) {
                 $output .= '<div class="input-group input-group-sm">';

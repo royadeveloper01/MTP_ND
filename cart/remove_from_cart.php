@@ -1,6 +1,5 @@
 <?php
-require_once __DIR__ . '/db.php';
-
+require_once __DIR__ . '/../db.php';
 $key = $_GET['key'] ?? null;
 
 if ($key) {
@@ -32,5 +31,5 @@ if ($key) {
 }
 
 // Redirect back to the cart page
-header("Location: " . BASE_URL . "/cart.php");
+header("Location: " . BASE_URL . "/cart/cart.php");
 exit;

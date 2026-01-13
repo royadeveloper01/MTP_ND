@@ -40,10 +40,18 @@ $page_css_map = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
+    <?php 
+    // Add version timestamp to force cache refresh when files change
+    $main_ver = file_exists(__DIR__ . '/style.css') ? filemtime(__DIR__ . '/style.css') : time();
+    ?>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css?v=<?= $main_ver ?>">
 
     <?php if (isset($page_css_map[$current_page])): ?>
-        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>">
+        <?php 
+        $page_css_path = __DIR__ . '/assets/css/' . $page_css_map[$current_page];
+        $page_ver = file_exists($page_css_path) ? filemtime($page_css_path) : time();
+        ?>
+        <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/<?= $page_css_map[$current_page] ?>?v=<?= $page_ver ?>">
     <?php endif; ?>
 </head>
 <body>
@@ -66,7 +74,7 @@ $page_css_map = [
 
         <?php if (empty($_SESSION['is_admin'])): ?>
             <li class="nav-item position-relative">
-              <a class="nav-link" href="<?= BASE_URL ?>/cart.php">
+              <a class="nav-link" href="<?= BASE_URL ?>/cart/cart.php">
                 <i class="bi bi-cart3"></i> Cart
                 <?php if ($cart_count > 0): ?>
                     <span class="badge bg-danger rounded-pill cart-badge"><?= (int)$cart_count ?></span>

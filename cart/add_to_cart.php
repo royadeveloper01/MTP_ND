@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/../db.php';
 
 // Admins can't add to cart
 if (!empty($_SESSION['is_admin'])) {
@@ -78,5 +78,5 @@ if (!empty($_SESSION['loggedin']) && !empty($_SESSION['id'])) {
 }
 
 // REDIRECT TO CART PAGE
-header('Location: ' . BASE_URL . '/cart.php');
+header('Location: ' . BASE_URL . '/cart/cart.php');
 exit;
