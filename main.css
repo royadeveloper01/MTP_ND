@@ -1,8 +1,0 @@
-.hover-white:hover {
-    color: #fff !important;
-    transition: color 0.2s;
-}
-
-/* Sticky footer setup */
-body { display: flex; flex-direction: column; min-height: 100vh; }
-main { flex: 1; }

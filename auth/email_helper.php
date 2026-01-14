@@ -34,11 +34,18 @@ function send_password_reset_email($email, $name, $reset_link) {
     if (empty($smtp_host) || empty($smtp_username) || empty($smtp_password)) {
         error_log('SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file.');
         // In a production environment, you wouldn't want to expose the reset link.
-        // This message helps in development but should not be shown to the end-user.
         return false;
     }
 
     $subject = 'Password Reset Request - ' . $from_name;
+
+    // Load email CSS from a separate file for better organization.
+    // It's injected into a <style> block because most email clients do not support external stylesheets.
+    $email_css = '';
+    $css_path = __DIR__ . '/../assets/css/email_template.css';
+    if (file_exists($css_path)) {
+        $email_css = file_get_contents($css_path);
+    }
     
     // Email body HTML
     $email_body = "
@@ -46,13 +53,7 @@ function send_password_reset_email($email, $name, $reset_link) {
     <html>
     <head>
         <meta charset='utf-8'>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .button { display: inline-block; padding: 12px 24px; background-color: #b45309; 
-                     color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-            .footer { margin-top: 30px; font-size: 12px; color: #666; }
-        </style>
+        <style>" . $email_css . "</style>
     </head>
     <body>
         <div class='container'>
@@ -108,10 +109,8 @@ function send_password_reset_email($email, $name, $reset_link) {
         $mail->send();
         return true;
     } catch (\PHPMailer\PHPMailer\Exception $e) {
-        // Log error (you can also display this for debugging)
-        error_log("PHPMailer Error: {$mail->ErrorInfo}");
-        // Uncomment the line below for debugging (remove in production)
-        // error_log("Failed to send email to $email: " . $mail->ErrorInfo);
+        // Log error with context for debugging and monitoring
+        error_log("Failed to send email to $email: " . $mail->ErrorInfo);
         return false;
     }
 }

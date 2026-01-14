@@ -38,8 +38,8 @@ function displayProductGrid($products) {
 
         $pid   = htmlspecialchars($p['id']);
 
-        // Only show 'Add to cart' button for non-admin users who are logged in
-        if (!empty($_SESSION['loggedin']) && empty($_SESSION['is_admin'])) {
+        // Show 'Add to cart' button for guests and non-admin users
+        if (empty($_SESSION['is_admin'])) {
             $js_config = json_encode([
                 'productId' => (int)$p['id'],
                 'hasSizes' => !empty($sizes),
@@ -66,14 +66,14 @@ function displayProductGrid($products) {
                     }
                     $output .= '</select>';
                 }
-                $output .= '<button @click="submit" :disabled="loading" class="btn btn-primary" style="min-width: 60px;">';
+            $output .= '<button @click="submit" :disabled="loading" class="btn btn-primary btn-add-variations">';
                 $output .= '<span x-show="!loading && !feedbackMessage">Add</span>';
                 $output .= '<span x-show="loading" class="spinner-border spinner-border-sm" role="status"></span>';
                 $output .= '<span x-show="feedbackMessage" x-text="feedbackMessage"></span>';
                 $output .= '</button>';
                 $output .= '</div>';
             } else {
-                $output .= '<button @click="submit" :disabled="loading" class="btn btn-sm btn-primary" style="min-width: 90px;"><span x-show="!loading && !feedbackMessage">Add to cart</span><span x-show="loading" class="spinner-border spinner-border-sm" role="status"></span><span x-show="feedbackMessage" x-text="feedbackMessage"></span></button>';
+            $output .= '<button @click="submit" :disabled="loading" class="btn btn-sm btn-primary btn-add-simple"><span x-show="!loading && !feedbackMessage">Add to cart</span><span x-show="loading" class="spinner-border spinner-border-sm" role="status"></span><span x-show="feedbackMessage" x-text="feedbackMessage"></span></button>';
             }
             $output .= '<div x-show="errorMessage" x-text="errorMessage" class="text-danger small mt-1" x-transition></div>';
             $output .= '</div>';

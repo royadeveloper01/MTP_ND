@@ -43,9 +43,14 @@ $page_css_map = [
     
     <?php 
     // Add version timestamp to force cache refresh when files change
-    $main_ver = file_exists(__DIR__ . '/style.css') ? filemtime(__DIR__ . '/style.css') : time();
+    $style_path = __DIR__ . '/assets/css/style.css';
+    $main_ver = file_exists($style_path) ? filemtime($style_path) : time();
+    
+    $main_css_path = __DIR__ . '/assets/css/main.css';
+    $main_css_ver = file_exists($main_css_path) ? filemtime($main_css_path) : time();
     ?>
-    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css?v=<?= $main_ver ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= $main_ver ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css?v=<?= $main_css_ver ?>">
 
     <?php if (isset($page_css_map[$current_page])): ?>
         <?php 
@@ -57,9 +62,9 @@ $page_css_map = [
 </head>
 <body>
 
-<video autoplay muted loop id="bgVideo">
+<!-- <video autoplay muted loop id="bgVideo">
     <source src="<?= BASE_URL ?>/videos/noel.mp4" type="video/mp4">
-</video>
+</video> -->
 
 <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
   <div class="container-fluid">

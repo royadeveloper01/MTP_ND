@@ -96,7 +96,10 @@ document.addEventListener('alpine:init', () => {
             formData.append('color', this.color || '');
             formData.append('ajax', '1');
 
-            fetch(`${config.baseUrl}/cart/add_to_cart.php`, {
+            // Ensure baseUrl doesn't have a trailing slash to prevent double slashes
+            const baseUrl = config.baseUrl.replace(/\/+$/, '');
+
+            fetch(`${baseUrl}/cart/add_to_cart.php`, {
                 method: 'POST',
                 body: formData
             })

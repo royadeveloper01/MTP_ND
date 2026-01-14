@@ -23,7 +23,7 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 
 if (empty($cart_from_db)) {
-    header('Location: ' . BASE_URL . '/cart.php');
+    header('Location: ' . BASE_URL . '/cart/cart.php');
     exit;
 }
 

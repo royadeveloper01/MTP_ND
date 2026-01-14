@@ -10,8 +10,3 @@ if (!defined('BASE_URL')) {
     $base = str_replace($doc_root, '', $dir_root);
     define('BASE_URL', $base);
 }
-
-if (!defined('AUTH_SECRET')) {
-    // Thay bằng chuỗi random dài trước khi deploy
-    define('AUTH_SECRET', 'replace_with_a_random_32+_char_secret!');
-}

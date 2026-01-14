@@ -8,7 +8,6 @@ if (file_exists(__DIR__ . '/../config.php')) {
 }
 // fallback if config missing
 if (!defined('BASE_URL')) define('BASE_URL', '/MTP_ND');
-if (!defined('AUTH_SECRET')) define('AUTH_SECRET', 'change_this_to_a_random_string_32_chars_long_!@#');
 
 // now load DB
 require_once __DIR__ . '/../db.php';

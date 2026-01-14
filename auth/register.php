@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input class="form-control" name="lname" placeholder="Last name" required value="<?=htmlspecialchars($_POST['lname'] ?? '')?>">
         <input class="form-control" name="email" type="email" placeholder="Email" required value="<?=htmlspecialchars($_POST['email'] ?? '')?>">
         
-        <input class="form-control" name="password" type="password" placeholder="Password" required x-model="password">
-        <input class="form-control" name="password2" type="password" placeholder="Confirm Password" required x-model="password_confirm">
+        <input class="form-control" name="password" type="password" placeholder="Password" required x-model="password" minlength="6">  
+        <input class="form-control" name="password2" type="password" placeholder="Confirm Password" required x-model="password_confirm" minlength="6">
         
         <!-- Alpine.js Validation Message -->
         <div x-show="password !== '' && password_confirm !== '' && password !== password_confirm" 
