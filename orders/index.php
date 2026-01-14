@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/auth/auth.php';
+// orders/index.php - Admin order list
+require_once __DIR__ . '/../auth/auth.php';
 
 // Admins only
 if (empty($_SESSION['is_admin'])) {
@@ -22,7 +23,7 @@ try {
     $error = "Database error: " . $e->getMessage();
 }
 
-include __DIR__ . '/header.php';
+include __DIR__ . '/../header.php';
 ?>
 
 <div class="container">
@@ -55,7 +56,7 @@ include __DIR__ . '/header.php';
                     <td><?= htmlspecialchars($order['created_at']) ?></td>
                     <td><span class="badge bg-info text-dark"><?= htmlspecialchars($order['status']) ?></span></td>
                     <td>
-                        <a href="view_order.php?id=<?= (int)$order['id'] ?>" class="btn btn-sm btn-info">View Details</a>
+                        <a href="<?= BASE_URL ?>/orders/view.php?id=<?= (int)$order['id'] ?>" class="btn btn-sm btn-info">View Details</a>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -64,4 +65,4 @@ include __DIR__ . '/header.php';
     <?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/footer.php'; ?>
+<?php include __DIR__ . '/../footer.php'; ?>

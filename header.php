@@ -38,13 +38,19 @@ $page_css_map = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MTP ND Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <?php 
     // Add version timestamp to force cache refresh when files change
-    $main_ver = file_exists(__DIR__ . '/style.css') ? filemtime(__DIR__ . '/style.css') : time();
+    $style_path = __DIR__ . '/assets/css/style.css';
+    $main_ver = file_exists($style_path) ? filemtime($style_path) : time();
+    
+    $main_css_path = __DIR__ . '/assets/css/main.css';
+    $main_css_ver = file_exists($main_css_path) ? filemtime($main_css_path) : time();
     ?>
-    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css?v=<?= $main_ver ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= $main_ver ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css?v=<?= $main_css_ver ?>">
 
     <?php if (isset($page_css_map[$current_page])): ?>
         <?php 
@@ -56,9 +62,9 @@ $page_css_map = [
 </head>
 <body>
 
-<video autoplay muted loop id="bgVideo">
+<!-- <video autoplay muted loop id="bgVideo">
     <source src="<?= BASE_URL ?>/videos/noel.mp4" type="video/mp4">
-</video>
+</video> -->
 
 <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
   <div class="container-fluid">
@@ -68,26 +74,33 @@ $page_css_map = [
     </button>
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a>
-        </li>
 
         <?php if (empty($_SESSION['is_admin'])): ?>
-            <li class="nav-item position-relative">
+            <li class="nav-item position-relative" x-data="{ cartCount: <?= (int)$cart_count ?> }" @cart-updated.window="cartCount = $event.detail.count">
               <a class="nav-link" href="<?= BASE_URL ?>/cart/cart.php">
                 <i class="bi bi-cart3"></i> Cart
-                <?php if ($cart_count > 0): ?>
-                    <span class="badge bg-danger rounded-pill cart-badge"><?= (int)$cart_count ?></span>
-                <?php endif; ?>
+                <template x-if="cartCount > 0">
+                    <span class="badge bg-danger rounded-pill cart-badge" x-text="cartCount"></span>
+                </template>
               </a>
             </li>
         <?php endif; ?>
 
         <?php if (!empty($_SESSION['loggedin'])): ?>
-            <li class="nav-item">
-              <a class="nav-link" href="<?= BASE_URL ?>/auth/logout.php">
-                Logout (<?= htmlspecialchars($_SESSION['fname']) ?>)
-              </a>
+            <li class="nav-item dropdown" x-data="{ open: false }">
+                <a class="nav-link dropdown-toggle" href="#" role="button" @click.prevent="open = !open" @click.outside="open = false" :aria-expanded="open">
+                    <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['fname']) ?>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" :class="{ 'show': open }">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/dashboard.php">Dashboard</a></li>
+                    <?php if (!empty($_SESSION['is_admin'])): ?>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/orders/index.php">Manage Orders</a></li>
+                    <?php else: ?>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/orders/my_orders.php">My Orders</a></li>
+                    <?php endif; ?>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="<?= BASE_URL ?>/auth/logout.php">Logout</a></li>
+                </ul>
             </li>
         <?php else: ?>
             <li class="nav-item">

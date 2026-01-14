@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         $conn->commit();
         
         // Redirect to Order Details
-        header("Location: view_order.php?id=" . $order_id);
+        header("Location: " . BASE_URL . "/orders/details.php?id=" . $order_id);
         exit;
 
     } catch (Exception $e) {

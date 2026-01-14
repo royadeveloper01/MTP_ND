@@ -119,6 +119,21 @@ CREATE TABLE order_items (
   CONSTRAINT fk_oi_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  used BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (id),
+  INDEX idx_token (token),
+  INDEX idx_user_id (user_id),
+  INDEX idx_expires_at (expires_at),
+  CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 -- Optional: Populate the new master tables with some default values
 INSERT INTO `sizes` (`name`) VALUES ('S'), ('M'), ('L'), ('XL'), ('XXL');
 INSERT INTO `colors` (`name`) VALUES ('Black'), ('White'), ('Red'), ('Blue'), ('Green'), ('Gray'), ('Pink'), ('Yellow');

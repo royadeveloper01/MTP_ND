@@ -25,7 +25,7 @@ if (file_exists(__DIR__ . '/.env')) {
 
 // AUTH secret for remember-me HMAC
 if (!defined('AUTH_SECRET')) {
-    define('AUTH_SECRET', 'change_this_to_a_random_32+_char_secret_please!');
+    define('AUTH_SECRET', getenv('AUTH_SECRET') ?: 'change_this_to_a_random_32+_char_secret_please!');
 }
 
 // ------------------------------
@@ -89,5 +89,5 @@ try {
 catch (Exception $e) {  
     // Display error to help debug connection issues on InfinityFree  
     // TODO: In production, log this error and show a generic message to the user.  
-    die("<h3>Database Connection Failed</h3><p>Error: " . htmlspecialchars($e->getMessage()) . "</p><p>Attempted Host: " . htmlspecialchars($host) . " <br> Attempted User: " . htmlspecialchars($user) . "</p>");  
-} 
+    die("<h3>Database Connection Failed</h3><p>Error: " . htmlspecialchars($e->getMessage()) . "</p><p>Attempted Host: " . htmlspecialchars((string)$host) . " <br> Attempted User: " . htmlspecialchars((string)$user) . "</p>");  
+}

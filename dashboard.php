@@ -130,7 +130,7 @@ $page_css = '/assets/css/dashboard.css';
                         <p class="stat-number"><?php echo $stats['orders']; ?></p>
                     </div>
                     <div>
-                        <a href="<?php echo BASE_URL; ?>/orders.php">Manage Orders →</a>
+                        <a href="<?php echo BASE_URL; ?>/orders/index.php">Manage Orders →</a>
                     </div>
                 </div>
                 <div class="stat-card">

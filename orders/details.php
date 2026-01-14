@@ -1,10 +1,10 @@
 <?php
-// order_details.php
+// orders/details.php - User order details
 // Load config to ensure BASE_URL is available
-require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/../config.php';
 
 // Include auth.php for session start and DB connection
-require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/../auth/auth.php';
 
 // Enforce login
 if (empty($_SESSION['loggedin'])) {
@@ -17,7 +17,7 @@ $user_id = $_SESSION['id'];
 
 // Redirect if invalid ID
 if ($order_id <= 0) {
-    header("Location: orders.php");
+    header("Location: " . BASE_URL . "/orders/my_orders.php");
     exit;
 }
 
@@ -60,19 +60,19 @@ if ($order) {
 <head>
     <meta charset="utf-8">
     <title>Order Details #<?= $order_id ?></title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/style.css">
 </head>
 <body>
-<?php if (file_exists('header.php')) include 'header.php'; ?>
+<?php include __DIR__ . '/../header.php'; ?>
 
 <div class="py-3">
     <?php if (!$order): ?>
         <div class="alert alert-danger">Order not found or you do not have permission to view it.</div>
-        <a href="orders.php" class="btn btn-secondary">Back to Orders</a>
+        <a href="<?= BASE_URL ?>/orders/my_orders.php" class="btn btn-secondary">Back to Orders</a>
     <?php else: ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Order #<?= htmlspecialchars($order['id']) ?></h2>
-            <a href="orders.php" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
+            <a href="<?= BASE_URL ?>/orders/my_orders.php" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
         </div>
 
         <div class="card mb-4 shadow-sm">
@@ -100,6 +100,6 @@ if ($order) {
     <?php endif; ?>
 </div>
 
-<?php if (file_exists('footer.php')) include 'footer.php'; ?>
+<?php include __DIR__ . '/../footer.php'; ?>
 </body>
 </html>

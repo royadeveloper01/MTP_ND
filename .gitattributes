@@ -1,0 +1,6 @@
+# Auto-detect text files and perform LF normalization
+* text=auto
+
+# Ensure specific file types always use LF (Unix-style) line endings
+*.php text eol=lf
+*.json text eol=lf

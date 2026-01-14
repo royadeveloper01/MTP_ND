@@ -1,12 +1,12 @@
 <?php
-// update_order_status.php
+// orders/update_status.php - Update order status
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/auth/auth.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../auth/auth.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . BASE_URL . '/auth/orders.php');
+    header('Location: ' . BASE_URL . '/orders/index.php');
     exit;
 }
 
@@ -33,7 +33,7 @@ $allowed_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled
 
 if (!$order_id || $status === '' || !in_array($status, $allowed_statuses, true)) {
     $_SESSION['error_message'] = 'Invalid data provided for status update.';
-    header('Location: ' . BASE_URL . '/auth/orders.php');
+    header('Location: ' . BASE_URL . '/orders/index.php');
     exit;
 }
 
@@ -58,5 +58,5 @@ try {
 }
 
 // Redirect back to order view
-header('Location: ' . BASE_URL . '/auth/view_order.php?id=' . $order_id);
+header('Location: ' . BASE_URL . '/orders/view.php?id=' . $order_id);
 exit;

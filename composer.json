@@ -1,0 +1,14 @@
+{
+    "name": "mtp-nd/store",
+    "description": "MTP Store Application",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

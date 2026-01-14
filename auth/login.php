@@ -61,6 +61,11 @@ if (isset($_GET['registered']) && $_GET['registered'] == '1') {
     $success_message = 'Registration successful! You can now log in.';
 }
 
+// Check for password reset success message
+if (isset($_GET['reset']) && $_GET['reset'] == 'success') {
+    $success_message = 'Password reset successful! You can now log in with your new password.';
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -158,6 +163,10 @@ if (file_exists(__DIR__ . '/../header.php')) include __DIR__ . '/../header.php';
 
         <input type="submit" value="Login" class="btn btn-primary">
     </form>
+
+    <p style="margin-top: 10px;">
+        <a href="forgot_password.php">Forgot Password?</a>
+    </p>
 
     <p>Don't have an account? <a href="register.php">Register here</a>.</p>
 </div>

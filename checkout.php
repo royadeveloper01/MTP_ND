@@ -33,7 +33,8 @@ $error = '';
 $is_in_transaction = false;
 
 try {
-    $product_ids = array_unique(array_column($cart_from_db, 'product_id'));
+    // Re-index array to ensure clean 0-based keys for binding
+    $product_ids = array_values(array_unique(array_column($cart_from_db, 'product_id')));
     
     if (empty($product_ids)) {
         throw new Exception("No products found in your cart.");
@@ -43,7 +44,18 @@ try {
     $types = str_repeat('i', count($product_ids));
 
     $stmt = $conn->prepare("SELECT id, name, price FROM products WHERE id IN ($placeholders)");
-    $stmt->bind_param($types, ...$product_ids);
+    if (!$stmt) {
+        throw new Exception("Product fetch prepare failed: " . $conn->error);
+    }
+    
+    // Fix: bind_param requires references, but (...) unpacking passes values.
+    // We create an array of references to satisfy mysqli requirements.
+    $params = [$types];
+    foreach ($product_ids as &$id) {
+        $params[] = &$id;
+    }
+    call_user_func_array([$stmt, 'bind_param'], $params);
+    
     $stmt->execute();
     $products_from_db = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
@@ -62,8 +74,8 @@ try {
             $final_items[] = [
                 'id'       => $pid,
                 'name'     => $product['name'],
-                'size'     => $item['size'],
-                'color'    => $item['color'],
+                'size'     => $item['size'] ?? '',
+                'color'    => $item['color'] ?? '',
                 'price'    => (float)$product['price'],
                 'quantity' => $qty
             ];
@@ -82,16 +94,35 @@ try {
     $shipping_address = 'Address on file';
 
     $stmt = $conn->prepare("INSERT INTO orders (user_id, total_amount, shipping_address) VALUES (?, ?, ?)");
+    if (!$stmt) {
+        throw new Exception("Order prepare failed: " . $conn->error);
+    }
     $stmt->bind_param('ids', $user_id, $final_total, $shipping_address);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception("Order creation failed: " . $stmt->error);
+    }
     $order_id = $stmt->insert_id;
     $stmt->close();
 
     // INSERT: variations correctly recorded in order history
     $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, size, color, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        throw new Exception("Order items prepare failed: " . $conn->error);
+    }
+    
+    // Bind variables once to prevent reference issues inside the loop
+    $p_id = 0; $p_size = ''; $p_color = ''; $p_qty = 0; $p_price = 0.0;
+    $stmt->bind_param('iissid', $order_id, $p_id, $p_size, $p_color, $p_qty, $p_price);
+
     foreach ($final_items as $item) {
-        $stmt->bind_param('iissid', $order_id, $item['id'], $item['size'], $item['color'], $item['quantity'], $item['price']);
-        $stmt->execute();
+        $p_id = $item['id'];
+        $p_size = $item['size'];
+        $p_color = $item['color'];
+        $p_qty = $item['quantity'];
+        $p_price = $item['price'];
+        if (!$stmt->execute()) {
+            throw new Exception("Order item insertion failed: " . $stmt->error);
+        }
     }
     $stmt->close();
 
@@ -104,6 +135,7 @@ try {
     $is_in_transaction = false;
 
 } catch (Exception $e) {
+} catch (Throwable $e) {
     if ($is_in_transaction) {
         $conn->rollback();
     }
