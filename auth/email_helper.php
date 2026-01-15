@@ -8,13 +8,16 @@
  * @param string $email User's email address
  * @param string $name User's first name
  * @param string $reset_link Password reset link
+ * @param string $error_msg Optional reference to store error message
  * @return bool True if email was sent successfully, false otherwise
  */
-function send_password_reset_email($email, $name, $reset_link) {
+function send_password_reset_email($email, $name, $reset_link, &$error_msg = '') {
     // Check if PHPMailer is installed
     $vendor_autoload = __DIR__ . '/../vendor/autoload.php';
     if (!file_exists($vendor_autoload)) {
         error_log("PHPMailer not installed. Please run 'composer install' in the project root.");
+        $error_msg = "PHPMailer not installed. Please run 'composer install' in the project root.";
+        error_log($error_msg);
         return false;
     }
     
@@ -22,17 +25,24 @@ function send_password_reset_email($email, $name, $reset_link) {
     require_once $vendor_autoload;
     
     // --- Production-Ready Email Configuration ---
+    // Helper to get env var from various sources (getenv, $_ENV, $_SERVER)
+    $get_env = function($key) {
+        return getenv($key) ?: ($_ENV[$key] ?? ($_SERVER[$key] ?? false));
+    };
+
     // Load from environment variables. See .env.example for details.
-    $smtp_host = getenv('SMTP_HOST');
-    $smtp_port = getenv('SMTP_PORT') ?: 587;
-    $smtp_username = getenv('SMTP_USER');
-    $smtp_password = getenv('SMTP_PASS');
-    $from_email = getenv('SMTP_FROM_EMAIL') ?: $smtp_username;
-    $from_name = getenv('SMTP_FROM_NAME') ?: 'MTP Store';
+    $smtp_host = $get_env('SMTP_HOST');
+    $smtp_port = $get_env('SMTP_PORT') ?: 587;
+    $smtp_username = $get_env('SMTP_USER');
+    $smtp_password = $get_env('SMTP_PASS');
+    $from_email = $get_env('SMTP_FROM_EMAIL') ?: $smtp_username;
+    $from_name = trim($get_env('SMTP_FROM_NAME') ?: 'MTP Store', '"\''); // Remove quotes if present
 
     // Validate that essential environment variables are set
     if (empty($smtp_host) || empty($smtp_username) || empty($smtp_password)) {
         error_log('SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file.');
+        $error_msg = 'SMTP configuration is incomplete. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file.';
+        error_log($error_msg);
         // In a production environment, you wouldn't want to expose the reset link.
         return false;
     }
@@ -84,6 +94,14 @@ function send_password_reset_email($email, $name, $reset_link) {
         $mail->Username   = $smtp_username;
         $mail->Password   = $smtp_password; // This will now use the value from getenv()
         $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        
+        // Automatically set encryption based on port
+        if ($smtp_port == 465) {
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS; // SSL
+        } else {
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS; // TLS
+        }
+        
         $mail->Port       = $smtp_port;
         $mail->CharSet    = 'UTF-8';
         
@@ -110,6 +128,7 @@ function send_password_reset_email($email, $name, $reset_link) {
         return true;
     } catch (\PHPMailer\PHPMailer\Exception $e) {
         // Log error with context for debugging and monitoring
+        $error_msg = $mail->ErrorInfo;
         error_log("Failed to send email to $email: " . $mail->ErrorInfo);
         return false;
     }
