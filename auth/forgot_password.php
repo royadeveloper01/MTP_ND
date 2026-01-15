@@ -59,13 +59,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                     // Send email (you can customize this function)
                     require_once __DIR__ . '/email_helper.php';
-                    $email_sent = send_password_reset_email($user['email'], $user['fname'], $reset_link);
+                    $mail_error = '';
+                    $email_sent = send_password_reset_email($user['email'], $user['fname'], $reset_link, $mail_error);
 
                     if ($email_sent) {
                         $success_message = 'Password reset instructions have been sent to your email address.';
                     } else {
                         // For development: show the link directly if email fails
-                        $message = 'Email sending failed. For development, use this link: <a href="' . htmlspecialchars($reset_link) . '">Reset Password</a>';
+                        $message = 'Email sending failed: ' . htmlspecialchars($mail_error) . '<br>For development, use this link: <a href="' . htmlspecialchars($reset_link) . '">Reset Password</a>';
                     }
                 } else {
                     $message = 'Failed to generate reset token. Please try again.';
